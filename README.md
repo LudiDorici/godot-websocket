@@ -25,6 +25,12 @@ The module supports writing data in both TEXT and BINARY mode.
 
 The idea for the future, is to provide the implementation of WebSocketClient in HTML5 exports too (using emscripten functions) so to have seamless transition from native to web client.
 
+### NOTE
+
+The demo server implementation is compatibile with the project for HTML5 in https://github.com/Faless/godot-websocket-demo , checkout the screenshot:
+
+![LWS Module Screenshot](https://github.com/LudiDorici/godot-lws/raw/master/screenshot.png)
+
 ### Build instruction
 
 Simply copy (or link) `modules/lws` inside Godot `modules` directory. Also copy `thirdparty/lws` inside Godot `thirdparty` directory.
