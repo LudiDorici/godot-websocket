@@ -1,6 +1,6 @@
 extends Node
 
-const RAW = true
+const PACKET = true
 
 class Peer extends Object:
 
@@ -14,13 +14,13 @@ class Peer extends Object:
 			_packet_peer.set_stream_peer(peer)
 
 	func send(data):
-		if RAW: # Sends as packets
+		if PACKET: # Sends as packets
 			_packet_peer.put_packet(var2bytes(data))
 		else: # Sends as var
 			_stream.put_var(data)
 
 	func recv():
-		if RAW:
+		if PACKET:
 			if _packet_peer.get_available_packet_count() > 0:
 				return bytes2var(_packet_peer.get_packet())
 		else:
