@@ -17,8 +17,20 @@ Compiles on (untested but should work):
  * iOS
  * OSX
 
+Breaks compilation:
+
+ * Javascipt/HTML5
+
+The module supports writing data in both TEXT and BINARY mode.
+
+The idea for the future, is to provide the implementation of WebSocketClient in HTML5 exports too (using emscripten functions) so to have seamless transition from native to web client.
+
 ### Build instruction
 
 Simply copy (or link) `modules/lws` inside Godot `modules` directory. Also copy `thirdparty/lws` inside Godot `thirdparty` directory.
 
 Compile Godot Engine as you would normally do.
+
+#### Support us
+
+If you like this, and want to support us, please follow us on [twitter](https://twitter.com/ludidorici)
