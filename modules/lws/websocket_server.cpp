@@ -26,7 +26,7 @@ uint32_t WebSocketServer::_gen_unique_id() const {
 		hash = hash_djb2_one_32(
 				(uint32_t)OS::get_singleton()->get_unix_time(), hash);
 		hash = hash_djb2_one_32(
-				(uint32_t)OS::get_singleton()->get_data_dir().hash64(), hash);
+				(uint32_t)OS::get_singleton()->get_data_path().hash64(), hash);
 		/*
 		hash = hash_djb2_one_32(
 			(uint32_t)OS::get_singleton()->get_unique_id().hash64(), hash );
