@@ -102,6 +102,65 @@ shortcut = null
 group = null
 text = "Listen"
 flat = false
+align = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/VBoxContainer"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_top = 28.0
+margin_right = 1024.0
+margin_bottom = 52.0
+rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
+mouse_filter = 1
+size_flags_horizontal = 1
+size_flags_vertical = 1
+alignment = 0
+
+[node name="LineEdit" type="LineEdit" parent="Panel/VBoxContainer/HBoxContainer2"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 977.0
+margin_bottom = 24.0
+rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
+mouse_filter = 0
+size_flags_horizontal = 3
+size_flags_vertical = 1
+focus_mode = 2
+placeholder_alpha = 0.6
+caret_blink = false
+caret_blink_speed = 0.65
+context_menu_enabled = true
+_sections_unfolded = [ "Size Flags" ]
+
+[node name="Button" type="Button" parent="Panel/VBoxContainer/HBoxContainer2"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 981.0
+margin_right = 1024.0
+margin_bottom = 24.0
+rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
+mouse_filter = 0
+size_flags_horizontal = 1
+size_flags_vertical = 1
+toggle_mode = false
+enabled_focus_mode = 2
+shortcut = null
+group = null
+text = "Send"
+flat = false
+align = 1
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Panel/VBoxContainer"]
 
@@ -109,7 +168,7 @@ anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_top = 28.0
+margin_top = 56.0
 margin_right = 1024.0
 margin_bottom = 600.0
 rect_pivot_offset = Vector2( 0, 0 )
@@ -120,8 +179,11 @@ bbcode_enabled = false
 bbcode_text = ""
 visible_characters = -1
 percent_visible = 1.0
+override_selected_font_color = false
 _sections_unfolded = [ "Size Flags" ]
 
 [connection signal="toggled" from="Panel/VBoxContainer/HBoxContainer/ListenBtn" to="Server" method="_on_ListenBtn_toggled"]
+
+[connection signal="pressed" from="Panel/VBoxContainer/HBoxContainer2/Button" to="Server" method="_on_Button_pressed"]
 
 

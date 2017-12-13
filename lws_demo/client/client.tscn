@@ -70,12 +70,12 @@ mouse_filter = 0
 size_flags_horizontal = 3
 size_flags_vertical = 1
 text = "ws://localhost/test/"
-expand_to_len = false
 focus_mode = 2
 placeholder_text = "ws://my.server/path/"
 placeholder_alpha = 0.6
 caret_blink = false
 caret_blink_speed = 0.65
+context_menu_enabled = true
 _sections_unfolded = [ "Placeholder", "Size Flags" ]
 
 [node name="SpinBox" type="SpinBox" parent="Panel/VBoxContainer/Connect"]
@@ -123,6 +123,7 @@ shortcut = null
 group = null
 text = "Connect"
 flat = false
+align = 1
 
 [node name="Send" type="HBoxContainer" parent="Panel/VBoxContainer"]
 
@@ -155,12 +156,12 @@ rect_clip_content = false
 mouse_filter = 0
 size_flags_horizontal = 3
 size_flags_vertical = 1
-expand_to_len = false
 focus_mode = 2
 placeholder_text = "Enter some text to send..."
 placeholder_alpha = 0.6
 caret_blink = false
 caret_blink_speed = 0.65
+context_menu_enabled = true
 _sections_unfolded = [ "Placeholder", "Size Flags" ]
 
 [node name="SendBtn" type="Button" parent="Panel/VBoxContainer/Send"]
@@ -183,6 +184,7 @@ shortcut = null
 group = null
 text = "Send"
 flat = false
+align = 1
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Panel/VBoxContainer"]
 
@@ -201,6 +203,7 @@ bbcode_enabled = false
 bbcode_text = ""
 visible_characters = -1
 percent_visible = 1.0
+override_selected_font_color = false
 _sections_unfolded = [ "Size Flags" ]
 
 [node name="Client" type="Node" parent="."]

@@ -31,7 +31,7 @@ func _client_disconnected():
 		_peer = null
 
 func _client_received():
-	Utils._log(_log_dest, "Client just received %s bytes" % _peer._stream.get_available_bytes())
+	Utils._log(_log_dest, "Client just received %s packets" % _peer._packet_peer.get_available_packet_count())
 	var data = _peer.recv()
 	Utils._log(_log_dest, "Received data: %s" % data)
 
@@ -44,7 +44,7 @@ func _on_ConnectBtn_toggled( pressed ):
 			Utils._log(_log_dest, "Connecting to host: %s : %s" % [txt, port])
 	else:
 		if _peer != null:
-			_peer._stream.close()
+			_peer.close()
 		_client.disconnect_from_host()
 
 func _on_SendBtn_pressed():

@@ -20,7 +20,7 @@ func _process(delta):
 		_server.poll()
 
 func _client_connected(id, protocol):
-	_clients[id] = Utils.Peer.new(_server.get_stream_peer(id))
+	_clients[id] = Utils.Peer.new(_server.get_peer(id))
 	Utils._log(_log_dest, "Client %s connected with protocol %s" % [id, protocol])
 
 func _client_disconnected(id):
@@ -33,7 +33,7 @@ func _client_receive(id):
 	var data = _clients[id].recv()
 	Utils._log(_log_dest, "Data from %s: %s" % [id, str(data)])
 	# Echo
-	_clients[id].send(data)
+	#_clients[id].send(data)
 
 func _on_ListenBtn_toggled( pressed ):
 	if pressed:
@@ -47,3 +47,9 @@ func _on_ListenBtn_toggled( pressed ):
 	else:
 		_server.stop()
 		Utils._log(_log_dest, "Server stopped")
+
+func _on_Button_pressed():
+	var data = get_node("../Panel/VBoxContainer/HBoxContainer2/LineEdit").text
+	for id in _clients:
+		_clients[id].send(data)
+	get_node("../Panel/VBoxContainer/HBoxContainer2/LineEdit").text = ""
