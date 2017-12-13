@@ -2,14 +2,14 @@
 #define WEBSOCKETPEER_H
 
 #include "core/error_list.h"
-#include "core/io/stream_peer.h"
+#include "core/io/packet_peer.h"
 #include "core/ring_buffer.h"
 #include "lws_config.h"
 #include "libwebsockets.h"
 
-class WebSocketPeer : public StreamPeer {
+class WebSocketPeer : public PacketPeer {
 
-	GDCLASS(WebSocketPeer, StreamPeer);
+	GDCLASS(WebSocketPeer, PacketPeer);
 
 public:
 	enum WriteMode {
@@ -17,26 +17,36 @@ public:
 		WRITE_MODE_BINARY = LWS_WRITE_BINARY,
 	};
 
+protected:
+	static void _bind_methods();
+
+private:
+
+	enum {
+		PACKET_BUFFER_SIZE = 65536 - 4 // 4 bytes for the size
+	};
+
+	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
+	struct lws *wsi;
+	WriteMode write_mode;
+
+public:
 	struct PeerData {
 		uint32_t peer_id;
 		bool force_close;
 		RingBuffer<uint8_t> rbw;
 		RingBuffer<uint8_t> rbr;
+		mutable uint8_t input_buffer[PACKET_BUFFER_SIZE];
+		uint32_t in_size;
+		int in_count;
+		int out_count;
 	};
 
-private:
-	struct lws *wsi;
-	WriteMode write_mode;
+	virtual int get_available_packet_count() const;
+	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const;
+	virtual Error put_packet(const uint8_t *p_buffer, int p_buffer_size);
 
-protected:
-	static void _bind_methods();
-
-public:
-	virtual Error put_data(const uint8_t *p_data, int p_bytes);
-	virtual Error put_partial_data(const uint8_t *p_data, int p_bytes, int &r_sent);
-	virtual Error get_data(uint8_t *p_buffer, int p_bytes);
-	virtual Error get_partial_data(uint8_t *p_buffer, int p_bytes, int &r_received);
-	virtual int get_available_bytes() const;
+	virtual int get_max_packet_size() const { return PACKET_BUFFER_SIZE; };
 
 	WriteMode get_write_mode() const;
 	void set_write_mode(WriteMode p_mode);

@@ -99,6 +99,9 @@ int WebSocketClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reaso
 			peer = Ref<WebSocketPeer>(memnew(WebSocketPeer));
 			peer->set_wsi(wsi);
 			peer_data->peer_id = 0;
+			peer_data->in_size = 0;
+			peer_data->in_count = 0;
+			peer_data->out_count = 0;
 			peer_data->rbw.resize(16);
 			peer_data->rbr.resize(16);
 			peer_data->force_close = false;
@@ -111,6 +114,8 @@ int WebSocketClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reaso
 			break;
 
 		case LWS_CALLBACK_CLOSED:
+			peer_data->in_count = 0;
+			peer_data->out_count = 0;
 			peer_data->rbw.resize(0);
 			peer_data->rbr.resize(0);
 			if (peer.is_valid())

@@ -23,8 +23,8 @@ public:
 	Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>());
 	void stop();
 	bool is_listening() const;
-	bool has_peer(int p_id);
-	Ref<StreamPeer> get_stream_peer(int p_id);
+	bool has_peer(int p_id) const;
+	Ref<WebSocketPeer> get_peer(int p_id) const;
 
 	WebSocketServer();
 	~WebSocketServer();

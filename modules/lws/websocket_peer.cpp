@@ -31,13 +31,23 @@ Error WebSocketPeer::read_wsi(void *in, size_t len) {
 	ERR_FAIL_COND_V(!is_connected_to_host(), FAILED);
 
 	PeerData *peer_data = (PeerData *)(lws_wsi_user(wsi));
+	int size = peer_data->in_size;
 
 	if (peer_data->rbr.space_left() < len) {
 		ERR_EXPLAIN("Buffer full! Dropping data");
 		ERR_FAIL_V(FAILED);
 	}
 
-	peer_data->rbr.write((uint8_t *)in, len);
+	copymem(&(peer_data->input_buffer[size]), in, len);
+	size += len;
+
+	peer_data->in_size = size;
+	if (lws_is_final_fragment(wsi)) {
+		peer_data->rbr.write((uint8_t *)(&size), 4);
+		peer_data->rbr.write(peer_data->input_buffer, size);
+		peer_data->in_count++;
+		peer_data->in_size = 0;
+	}
 
 	return OK;
 }
@@ -49,38 +59,78 @@ Error WebSocketPeer::write_wsi() {
 	PeerData *peer_data = (PeerData *)(lws_wsi_user(wsi));
 	PoolVector<uint8_t> tmp;
 	int left = peer_data->rbw.data_left();
+	uint32_t to_write = 0;
 
-	if (left == 0)
+	if (left == 0 || peer_data->out_count == 0)
 		return OK;
 
-	tmp.resize(LWS_PRE + left);
-	peer_data->rbw.read(&(tmp.write()[LWS_PRE]), left);
-	lws_write(wsi, &(tmp.write()[LWS_PRE]), left, (enum lws_write_protocol)write_mode);
+	peer_data->rbw.read((uint8_t *)&to_write, 4);
+	peer_data->out_count--;
+
+	if (left < to_write) {
+		peer_data->rbw.advance_read(left);
+		return FAILED;
+	}
+
+	tmp.resize(LWS_PRE + to_write);
+	peer_data->rbw.read(&(tmp.write()[LWS_PRE]), to_write);
+	lws_write(wsi, &(tmp.write()[LWS_PRE]), to_write, (enum lws_write_protocol)write_mode);
 	tmp.resize(0);
+
+	if (peer_data->out_count > 0)
+		lws_callback_on_writable(wsi); // we want to write more!
 
 	return OK;
 }
 
-Error WebSocketPeer::write(const uint8_t *p_data, int p_bytes, int &r_sent, bool p_block) {
+Error WebSocketPeer::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
 
 	ERR_FAIL_COND_V(!is_connected_to_host(), FAILED);
 
 	PeerData *peer_data = (PeerData *)lws_wsi_user(wsi);
-	r_sent = peer_data->rbw.write(p_data, MIN(p_bytes, peer_data->rbw.space_left()));
+	peer_data->rbw.write((uint8_t *)&p_buffer_size, 4);
+	peer_data->rbw.write(p_buffer, MIN(p_buffer_size, peer_data->rbw.space_left()));
+	peer_data->out_count++;
 
 	lws_callback_on_writable(wsi); // notify that we want to write
 	return OK;
 };
 
-Error WebSocketPeer::read(uint8_t *p_buffer, int p_bytes, int &r_received, bool p_block) {
+Error WebSocketPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) const {
 
 	ERR_FAIL_COND_V(!is_connected_to_host(), FAILED);
 
 	PeerData *peer_data = (PeerData *)lws_wsi_user(wsi);
-	r_received = MIN(p_bytes, peer_data->rbr.data_left());
-	peer_data->rbr.read(p_buffer, r_received);
+
+	if (peer_data->in_count == 0)
+		return ERR_UNAVAILABLE;
+
+	uint32_t to_read = 0;
+	uint32_t left = 0;
+	r_buffer_size = 0;
+
+	peer_data->rbr.read((uint8_t *)&to_read, 4);
+	peer_data->in_count--;
+	left = peer_data->rbr.data_left();
+
+	if(left < to_read) {
+		peer_data->rbr.advance_read(left);
+		return FAILED;
+	}
+
+	peer_data->rbr.read(packet_buffer, to_read);
+	*r_buffer = packet_buffer;
+	r_buffer_size = to_read;
 
 	return OK;
+};
+
+int WebSocketPeer::get_available_packet_count() const {
+
+	if (!is_connected_to_host())
+		return 0;
+
+	return ((PeerData *)lws_wsi_user(wsi))->in_count;
 };
 
 bool WebSocketPeer::is_binary_frame() const {
@@ -118,35 +168,6 @@ void WebSocketPeer::close() {
 		lws_callback_on_writable(tmp); // notify that we want to disconnect
 	}
 };
-
-Error WebSocketPeer::put_data(const uint8_t *p_data, int p_bytes) {
-
-	int total;
-	return write(p_data, p_bytes, total, true);
-};
-
-Error WebSocketPeer::put_partial_data(const uint8_t *p_data, int p_bytes, int &r_sent) {
-
-	return write(p_data, p_bytes, r_sent, false);
-};
-
-Error WebSocketPeer::get_data(uint8_t *p_buffer, int p_bytes) {
-
-	int total;
-	return read(p_buffer, p_bytes, total, true);
-};
-
-Error WebSocketPeer::get_partial_data(uint8_t *p_buffer, int p_bytes, int &r_received) {
-
-	return read(p_buffer, p_bytes, r_received, false);
-};
-
-int WebSocketPeer::get_available_bytes() const {
-
-	ERR_FAIL_COND_V(!is_connected_to_host(), 0);
-
-	return ((PeerData *)(lws_wsi_user(wsi)))->rbr.data_left();
-}
 
 IP_Address WebSocketPeer::get_connected_host() const {
 

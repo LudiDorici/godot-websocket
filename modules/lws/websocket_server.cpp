@@ -7,7 +7,7 @@ void WebSocketServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("listen", "port", "protocols"), &WebSocketServer::listen, DEFVAL(PoolVector<String>()));
 	ClassDB::bind_method(D_METHOD("stop"), &WebSocketServer::stop);
 	ClassDB::bind_method(D_METHOD("has_peer", "id"), &WebSocketServer::has_peer);
-	ClassDB::bind_method(D_METHOD("get_stream_peer", "id"), &WebSocketServer::get_stream_peer);
+	ClassDB::bind_method(D_METHOD("get_peer", "id"), &WebSocketServer::get_peer);
 	//BIND_ENUM_CONSTANT(COMPRESS_NONE);
 
 	ADD_SIGNAL(MethodInfo("client_disconnected", PropertyInfo(Variant::INT, "id")));
@@ -97,6 +97,9 @@ int WebSocketServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reaso
 			peer_map[id] = peer;
 
 			peer_data->peer_id = id;
+			peer_data->in_size = 0;
+			peer_data->in_count = 0;
+			peer_data->out_count = 0;
 			peer_data->rbw.resize(16);
 			peer_data->rbr.resize(16);
 			peer_data->force_close = false;
@@ -111,6 +114,8 @@ int WebSocketServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reaso
 				peer_map[id]->close();
 				peer_map.erase(id);
 			}
+			peer_data->in_count = 0;
+			peer_data->out_count = 0;
 			peer_data->rbr.resize(0);
 			peer_data->rbw.resize(0);
 			emit_signal("client_disconnected", id);
@@ -151,11 +156,11 @@ void WebSocketServer::stop() {
 	context = NULL;
 }
 
-bool WebSocketServer::has_peer(int p_id) {
+bool WebSocketServer::has_peer(int p_id) const {
 	return peer_map.has(p_id);
 }
 
-Ref<StreamPeer> WebSocketServer::get_stream_peer(int p_id) {
+Ref<WebSocketPeer> WebSocketServer::get_peer(int p_id) const {
 	ERR_FAIL_COND_V(!has_peer(p_id), NULL);
 	return peer_map[p_id];
 }
