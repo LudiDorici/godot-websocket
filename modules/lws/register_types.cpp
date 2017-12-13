@@ -29,15 +29,19 @@
 /*************************************************************************/
 #include "register_types.h"
 #include "error_macros.h"
-#include "websocket_client.h"
-#include "websocket_peer.h"
-#include "websocket_server.h"
+#include "lws_client.h"
+#include "lws_peer.h"
+#include "lws_server.h"
 
 void register_lws_types() {
+	LWSPeer::make_default();
+	LWSClient::make_default();
+	LWSServer::make_default();
 
-	ClassDB::register_class<WebSocketPeer>();
-	ClassDB::register_class<WebSocketClient>();
-	ClassDB::register_class<WebSocketServer>();
+	ClassDB::register_custom_instance_class<WebSocketServer>();
+	ClassDB::register_custom_instance_class<WebSocketClient>();
+	ClassDB::register_custom_instance_class<WebSocketPeer>();
+
 }
 
 void unregister_lws_types() {

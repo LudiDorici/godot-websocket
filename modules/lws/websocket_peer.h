@@ -6,70 +6,50 @@
 #include "core/ring_buffer.h"
 #include "lws_config.h"
 #include "libwebsockets.h"
+#include "websocket_macros.h"
 
 class WebSocketPeer : public PacketPeer {
 
 	GDCLASS(WebSocketPeer, PacketPeer);
+	GDCICLASS(WebSocketPeer);
 
 public:
 	enum WriteMode {
-		WRITE_MODE_TEXT = LWS_WRITE_TEXT,
-		WRITE_MODE_BINARY = LWS_WRITE_BINARY,
+		WRITE_MODE_TEXT,
+		WRITE_MODE_BINARY,
 	};
 
 protected:
-	static void _bind_methods();
+	static void _bind_methods() {
+		ClassDB::bind_method(D_METHOD("get_write_mode"), &WebSocketPeer::get_write_mode);
+		ClassDB::bind_method(D_METHOD("set_write_mode", "mode"), &WebSocketPeer::set_write_mode);
+		ClassDB::bind_method(D_METHOD("is_connected_to_host"), &WebSocketPeer::is_connected_to_host);
+		ClassDB::bind_method(D_METHOD("is_binary_frame"), &WebSocketPeer::is_binary_frame);
+		ClassDB::bind_method(D_METHOD("close"), &WebSocketPeer::close);
 
-private:
-
-	enum {
-		PACKET_BUFFER_SIZE = 65536 - 4 // 4 bytes for the size
-	};
-
-	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
-	struct lws *wsi;
-	WriteMode write_mode;
+		BIND_ENUM_CONSTANT(WRITE_MODE_TEXT);
+		BIND_ENUM_CONSTANT(WRITE_MODE_BINARY);
+	}
 
 public:
-	struct PeerData {
-		uint32_t peer_id;
-		bool force_close;
-		RingBuffer<uint8_t> rbw;
-		RingBuffer<uint8_t> rbr;
-		mutable uint8_t input_buffer[PACKET_BUFFER_SIZE];
-		uint32_t in_size;
-		int in_count;
-		int out_count;
-	};
 
-	virtual int get_available_packet_count() const;
-	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const;
-	virtual Error put_packet(const uint8_t *p_buffer, int p_buffer_size);
+	virtual int get_available_packet_count() const = 0;
+	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const = 0;
+	virtual Error put_packet(const uint8_t *p_buffer, int p_buffer_size) = 0;
+	virtual int get_max_packet_size() const = 0;
 
-	virtual int get_max_packet_size() const { return PACKET_BUFFER_SIZE; };
+	virtual WriteMode get_write_mode() const = 0;
+	virtual void set_write_mode(WriteMode p_mode) = 0;
 
-	WriteMode get_write_mode() const;
-	void set_write_mode(WriteMode p_mode);
-	void set_wsi(struct lws *wsi);
+	virtual void close() = 0;
 
-	Error read_wsi(void *in, size_t len);
-	Error write_wsi();
+	virtual bool is_connected_to_host() const = 0;
+	virtual IP_Address get_connected_host() const = 0;
+	virtual uint16_t get_connected_port() const = 0;
+	virtual bool is_binary_frame() const = 0;
 
-	Error read(uint8_t *p_buffer, int p_bytes, int &r_received, bool p_block);
-	Error write(const uint8_t *p_data, int p_bytes, int &r_sent, bool p_block);
-
-	Error connect_to_host(String p_host, uint16_t p_port);
-	void close();
-
-	bool is_connected_to_host() const;
-	bool is_binary_frame() const;
-	bool is_final_fragment() const;
-	bool is_first_fragment() const;
-	IP_Address get_connected_host() const;
-	uint16_t get_connected_port() const;
-
-	WebSocketPeer();
-	~WebSocketPeer();
+	WebSocketPeer() {};
+	~WebSocketPeer() {};
 };
 
 VARIANT_ENUM_CAST(WebSocketPeer::WriteMode);
