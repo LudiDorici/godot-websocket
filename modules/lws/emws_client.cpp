@@ -31,14 +31,24 @@ void _esws_on_close(void *obj, int code, char* reason, int was_clean)  {
 Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, bool p_ssl, PoolVector<String> p_protocols) {
 
 	String str = "ws://";
+	String proto_string = "";
+	int i = 0;
 
 	if(p_ssl)
 		str = "wss://";
 	str += p_host + ":" + itos(p_port) + p_path;
+	for (int i = 0; i < p_protocols.size(); i++) {
+		proto_string += p_protocols[i];
+		proto_string += ",";
+	}
+	if (proto_string == "")
+		proto_string = "binary,";
+
+	proto_string = proto_string.substr(0, proto_string.length()-1);
 
 	/* clang-format off */
 	int peer_sock = EM_ASM_INT({
-		var socket = new WebSocket(UTF8ToString($1));
+		var socket = new WebSocket(UTF8ToString($1), UTF8ToString($2).split(","));
 
 		// Connection opened
 		socket.addEventListener("open", function (event) {
@@ -103,7 +113,7 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 		});
 
 		return Module.IDHandler.add(socket);
-	}, this, str.utf8().get_data());
+	}, this, str.utf8().get_data(), proto_string.utf8().get_data());
 	/* clang-format on */
 
 	peer = Ref<EMWSPeer>(memnew(EMWSPeer));
