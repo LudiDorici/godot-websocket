@@ -28,17 +28,24 @@ void _esws_on_close(void *obj, int code, char* reason, int was_clean)  {
 }
 }
 
-Error EMWSClient::connect_to_host(String p_host, uint16_t p_port, PoolVector<String> p_protocols) {
+Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, bool p_ssl, PoolVector<String> p_protocols) {
+
+	String str = "ws://";
+
+	if(p_ssl)
+		str = "wss://";
+	str += p_host + ":" + itos(p_port) + p_path;
+
 	/* clang-format off */
 	int peer_sock = EM_ASM_INT({
-		var socket = new WebSocket(UTF8ToString($0) + ":" + $1);
+		var socket = new WebSocket(UTF8ToString($1));
 
 		// Connection opened
 		socket.addEventListener("open", function (event) {
 			Module.ccall("_esws_on_connect",
 					"void",
 					["number", "string"],
-					[$2, socket.protocol]
+					[$0, socket.protocol]
 			);
 		});
 
@@ -71,7 +78,7 @@ Error EMWSClient::connect_to_host(String p_host, uint16_t p_port, PoolVector<Str
 			Module.ccall("_esws_on_message",
 					"void",
 					["number", "number", "number"],
-					[$2, out, len]
+					[$0, out, len]
 			);
 			Module._free(out);
 		});
@@ -80,7 +87,7 @@ Error EMWSClient::connect_to_host(String p_host, uint16_t p_port, PoolVector<Str
 			Module.ccall("_esws_on_error",
 					"void",
 					["number"],
-					[$2]
+					[$0]
 			);
 		});
 
@@ -91,12 +98,12 @@ Error EMWSClient::connect_to_host(String p_host, uint16_t p_port, PoolVector<Str
 			Module.ccall("_esws_on_close",
 					"void",
 					["number", "number", "string", "number"],
-					[$2, event.code, event.reason, was_clean]
+					[$0, event.code, event.reason, was_clean]
 			);
 		});
 
 		return Module.IDHandler.add(socket);
-	}, p_host.utf8().get_data(), p_port, this);
+	}, this, str.utf8().get_data());
 	/* clang-format on */
 
 	peer = Ref<EMWSPeer>(memnew(EMWSPeer));
