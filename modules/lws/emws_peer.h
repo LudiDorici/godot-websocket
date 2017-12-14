@@ -1,5 +1,5 @@
-#ifndef ESWSPEER_H
-#define ESWSPEER_H
+#ifndef EMWSPEER_H
+#define EMWSPEER_H
 
 #ifdef JAVASCRIPT_ENABLED
 
@@ -9,9 +9,9 @@
 #include "emscripten.h"
 #include "websocket_peer.h"
 
-class ESWSPeer : public WebSocketPeer {
+class EMWSPeer : public WebSocketPeer {
 
-	GDCIIMPL(ESWSPeer, WebSocketPeer);
+	GDCIIMPL(EMWSPeer, WebSocketPeer);
 
 private:
 
@@ -48,8 +48,8 @@ public:
 	Error read_wsi(void *in, size_t len);
 	Error write_wsi();
 
-	ESWSPeer();
-	~ESWSPeer();
+	EMWSPeer();
+	~EMWSPeer();
 };
 
 #endif // JAVASCRIPT_ENABLED

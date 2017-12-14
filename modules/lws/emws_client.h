@@ -1,17 +1,17 @@
-#ifndef ESWSCLIENT_H
-#define ESWSCLIENT_H
+#ifndef EMWSCLIENT_H
+#define EMWSCLIENT_H
 
 #ifdef JAVASCRIPT_ENABLED
 
 #include "core/error_list.h"
 #include "websocket_client.h"
-#include "esws_peer.h"
+#include "emws_peer.h"
 
-class ESWSClient : public WebSocketClient {
+class EMWSClient : public WebSocketClient {
 
-	GDCIIMPL(ESWSClient, WebSocketClient);
+	GDCIIMPL(EMWSClient, WebSocketClient);
 
-	Ref<ESWSPeer> peer;
+	Ref<EMWSPeer> peer;
 public:
 
 	Error connect_to_host(String p_host, uint16_t p_port, PoolVector<String> p_protocol = PoolVector<String>());
@@ -23,11 +23,11 @@ public:
 	uint16_t get_connected_port() const;
 	virtual void poll();
 	void hail(){WARN_PRINTS("Hello there, my friend!");}
-	ESWSClient();
-	~ESWSClient();
+	EMWSClient();
+	~EMWSClient();
 
 };
 
 #endif // JAVASCRIPT_ENABLED
 
-#endif // ESWSCLIENT_H
+#endif // EMWSCLIENT_H

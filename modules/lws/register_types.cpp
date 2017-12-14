@@ -30,9 +30,9 @@
 #include "register_types.h"
 #include "error_macros.h"
 #ifdef JAVASCRIPT_ENABLED
-#include "esws_peer.h"
-#include "esws_client.h"
-#include "esws_server.h"
+#include "emws_peer.h"
+#include "emws_client.h"
+#include "emws_server.h"
 #include "emscripten.h"
 #else
 #include "lws_peer.h"
@@ -61,9 +61,9 @@ void register_lws_types() {
 		};
 		Module["IDHandler"] = IDHandler;
 	});
-	ESWSPeer::make_default();
-	ESWSClient::make_default();
-	ESWSServer::make_default();
+	EMWSPeer::make_default();
+	EMWSClient::make_default();
+	EMWSServer::make_default();
 #else
 	LWSPeer::make_default();
 	LWSClient::make_default();
