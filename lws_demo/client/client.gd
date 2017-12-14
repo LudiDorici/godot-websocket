@@ -48,10 +48,9 @@ func _client_received():
 func _on_ConnectBtn_toggled( pressed ):
 	if pressed:
 		var txt = get_node("../Panel/VBoxContainer/Connect/LineEdit").get_text()
-		var port = get_node("../Panel/VBoxContainer/Connect/SpinBox").get_value()
 		if txt != "":
-			_client.connect_to_host(txt, int(port), PoolStringArray(["my-protocol-2", "my-protocol", "binary"]))
-			Utils._log(_log_dest, "Connecting to host: %s : %s" % [txt, port])
+			_client.connect_to_url(txt, PoolStringArray(["my-protocol-2", "my-protocol", "binary"]))
+			Utils._log(_log_dest, "Connecting to host: %s" % [txt])
 	else:
 		if _peer != null:
 			_peer.close()
