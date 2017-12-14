@@ -49,6 +49,7 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 	/* clang-format off */
 	int peer_sock = EM_ASM_INT({
 		var socket = new WebSocket(UTF8ToString($1), UTF8ToString($2).split(","));
+		socket.binaryType = "arraybuffer";
 
 		// Connection opened
 		socket.addEventListener("open", function (event) {
