@@ -1,3 +1,5 @@
+#ifndef JAVASCRIPT_ENABLED
+
 #include "lws_peer.h"
 #include "core/io/ip.h"
 
@@ -161,3 +163,5 @@ LWSPeer::~LWSPeer() {
 
 	close();
 };
+
+#endif // JAVASCRIPT_ENABLED

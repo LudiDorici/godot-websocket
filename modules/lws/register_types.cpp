@@ -29,20 +29,30 @@
 /*************************************************************************/
 #include "register_types.h"
 #include "error_macros.h"
-#include "lws_client.h"
+#ifdef JAVASCRIPT_ENABLED
+#include "esws_peer.h"
+#include "esws_client.h"
+#include "esws_server.h"
+#else
 #include "lws_peer.h"
+#include "lws_client.h"
 #include "lws_server.h"
+#endif
 
 void register_lws_types() {
+#ifdef JAVASCRIPT_ENABLED
+	ESWSPeer::make_default();
+	ESWSClient::make_default();
+	ESWSServer::make_default();
+#else
 	LWSPeer::make_default();
 	LWSClient::make_default();
 	LWSServer::make_default();
+#endif
 
 	ClassDB::register_custom_instance_class<WebSocketServer>();
 	ClassDB::register_custom_instance_class<WebSocketClient>();
 	ClassDB::register_custom_instance_class<WebSocketPeer>();
-
 }
 
-void unregister_lws_types() {
-}
+void unregister_lws_types() {}

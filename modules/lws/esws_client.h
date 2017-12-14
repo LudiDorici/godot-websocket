@@ -1,21 +1,15 @@
-#ifndef LWSCLIENT_H
-#define LWSCLIENT_H
+#ifndef ESWSCLIENT_H
+#define ESWSCLIENT_H
 
-#ifndef JAVASCRIPT_ENABLED
+#ifdef JAVASCRIPT_ENABLED
 
 #include "core/error_list.h"
 #include "websocket_client.h"
-#include "lws_helper.h"
-#include "lws_peer.h"
+#include "esws_peer.h"
 
-class LWSClient : public WebSocketClient {
+class ESWSClient : public WebSocketClient {
 
-	GDCIIMPL(LWSClient, WebSocketClient);
-
-	LWS_HELPER(LWSClient);
-
-private:
-	Ref<LWSPeer> peer;
+	GDCIIMPL(ESWSClient, WebSocketClient);
 
 public:
 
@@ -26,13 +20,13 @@ public:
 	void disconnect_from_host();
 	IP_Address get_connected_host() const;
 	uint16_t get_connected_port() const;
-	virtual void poll() { _lws_poll(); }
+	virtual void poll();
 
-	LWSClient();
-	~LWSClient();
+	ESWSClient();
+	~ESWSClient();
 
 };
 
 #endif // JAVASCRIPT_ENABLED
 
-#endif // LWSCLIENT_H
+#endif // ESWSCLIENT_H

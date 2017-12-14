@@ -1,18 +1,16 @@
-#ifndef LWSPEER_H
-#define LWSPEER_H
+#ifndef ESWSPEER_H
+#define ESWSPEER_H
 
-#ifndef JAVASCRIPT_ENABLED
+#ifdef JAVASCRIPT_ENABLED
 
 #include "core/error_list.h"
 #include "core/io/packet_peer.h"
 #include "core/ring_buffer.h"
 #include "websocket_peer.h"
-#include "lws_config.h"
-#include "libwebsockets.h"
 
-class LWSPeer : public WebSocketPeer {
+class ESWSPeer : public WebSocketPeer {
 
-	GDCIIMPL(LWSPeer, WebSocketPeer);
+	GDCIIMPL(ESWSPeer, WebSocketPeer);
 
 private:
 
@@ -20,21 +18,9 @@ private:
 		PACKET_BUFFER_SIZE = 65536 - 4 // 4 bytes for the size
 	};
 
-	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
-	struct lws *wsi;
 	WriteMode write_mode;
 
 public:
-	struct PeerData {
-		uint32_t peer_id;
-		bool force_close;
-		RingBuffer<uint8_t> rbw;
-		RingBuffer<uint8_t> rbr;
-		mutable uint8_t input_buffer[PACKET_BUFFER_SIZE];
-		uint32_t in_size;
-		int in_count;
-		int out_count;
-	};
 
 	virtual int get_available_packet_count() const;
 	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const;
@@ -54,8 +40,8 @@ public:
 	Error read_wsi(void *in, size_t len);
 	Error write_wsi();
 
-	LWSPeer();
-	~LWSPeer();
+	ESWSPeer();
+	~ESWSPeer();
 };
 
 #endif // JAVASCRIPT_ENABLED

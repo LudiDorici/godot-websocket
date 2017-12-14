@@ -1,6 +1,8 @@
 #ifndef LWSSERVER_H
 #define LWSSERVER_H
 
+#ifndef JAVASCRIPT_ENABLED
+
 #include "core/reference.h"
 #include "websocket_server.h"
 #include "lws_helper.h"
@@ -28,5 +30,7 @@ public:
 	LWSServer();
 	~LWSServer();
 };
+
+#endif // JAVASCRIPT_ENABLED
 
 #endif // LWSSERVER_H

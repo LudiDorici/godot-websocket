@@ -63,14 +63,17 @@ else:
 
 thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
 
-env_lws.add_source_files(env.modules_sources, thirdparty_sources)
-env_lws.Append(CPPPATH=[thirdparty_dir])
+if env_lws["platform"] == "javascript":
+    pass
+else:
+    env_lws.add_source_files(env.modules_sources, thirdparty_sources)
+    env_lws.Append(CPPPATH=[thirdparty_dir])
 
-if env['builtin_openssl']:
-    env_lws.Append(CPPPATH=[openssl_dir])
+    if env['builtin_openssl']:
+        env_lws.Append(CPPPATH=[openssl_dir])
 
-if env_lws["platform"] == "windows":
-    env_lws.Append(CPPPATH=[thirdparty_dir + helper_dir])
+    if env_lws["platform"] == "windows":
+        env_lws.Append(CPPPATH=[thirdparty_dir + helper_dir])
 
 #env_lws.Append(CPPFLAGS=["-DGODOT_ENET", "-DLWS_WITH_STATIC", "-DLWS_WITH_SSL", ""])
 

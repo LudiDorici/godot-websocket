@@ -1,3 +1,5 @@
+#ifndef JAVASCRIPT_ENABLED
+
 #include "lws_client.h"
 #include "core/io/ip.h"
 
@@ -180,3 +182,5 @@ LWSClient::~LWSClient() {
 
 	disconnect_from_host();
 };
+
+#endif // JAVASCRIPT_ENABLED

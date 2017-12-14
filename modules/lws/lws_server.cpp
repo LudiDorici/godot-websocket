@@ -1,3 +1,5 @@
+#ifndef JAVASCRIPT_ENABLED
+
 #include "lws_server.h"
 #include "core/os/os.h"
 
@@ -155,3 +157,5 @@ LWSServer::LWSServer() {
 LWSServer::~LWSServer() {
 	stop();
 }
+
+#endif // JAVASCRIPT_ENABLED
