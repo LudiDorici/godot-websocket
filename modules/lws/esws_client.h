@@ -11,6 +11,7 @@ class ESWSClient : public WebSocketClient {
 
 	GDCIIMPL(ESWSClient, WebSocketClient);
 
+	Ref<ESWSPeer> peer;
 public:
 
 	Error connect_to_host(String p_host, uint16_t p_port, PoolVector<String> p_protocol = PoolVector<String>());
@@ -21,7 +22,7 @@ public:
 	IP_Address get_connected_host() const;
 	uint16_t get_connected_port() const;
 	virtual void poll();
-
+	void hail(){WARN_PRINTS("Hello there, my friend!");}
 	ESWSClient();
 	~ESWSClient();
 

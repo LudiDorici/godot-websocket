@@ -6,6 +6,7 @@
 #include "core/error_list.h"
 #include "core/io/packet_peer.h"
 #include "core/ring_buffer.h"
+#include "emscripten.h"
 #include "websocket_peer.h"
 
 class ESWSPeer : public WebSocketPeer {
@@ -18,10 +19,17 @@ private:
 		PACKET_BUFFER_SIZE = 65536 - 4 // 4 bytes for the size
 	};
 
+	int peer_sock;
 	WriteMode write_mode;
+
+	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
+	mutable RingBuffer<uint8_t> in_buffer;
+	mutable int queue_count;
 
 public:
 
+	void read_msg(uint8_t *p_data, uint32_t p_size);
+	void set_sock(int sock);
 	virtual int get_available_packet_count() const;
 	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const;
 	virtual Error put_packet(const uint8_t *p_buffer, int p_buffer_size);

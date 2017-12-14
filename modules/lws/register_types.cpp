@@ -33,6 +33,7 @@
 #include "esws_peer.h"
 #include "esws_client.h"
 #include "esws_server.h"
+#include "emscripten.h"
 #else
 #include "lws_peer.h"
 #include "lws_client.h"
@@ -41,6 +42,25 @@
 
 void register_lws_types() {
 #ifdef JAVASCRIPT_ENABLED
+	EM_ASM({
+		var IDHandler = {};
+		IDHandler["ids"] = [];
+		// get an integer ID for a JS object. this keeps a reference to it, preventing GC'ing
+		IDHandler["add"] = function(obj) {
+			var id = IDHandler.ids.length;
+			IDHandler.ids[id] = obj;
+			return id;
+		};
+		// get a JS object from an integer ID
+		IDHandler["get"] = function(id) {
+			return IDHandler.ids[id];
+		};
+		// releases an object that has an ID. this allows it to be GD'd
+		IDHandler["remove"] = function(id) {
+			IDHandler.ids[id] = null;
+		};
+		Module["IDHandler"] = IDHandler;
+	});
 	ESWSPeer::make_default();
 	ESWSClient::make_default();
 	ESWSServer::make_default();
