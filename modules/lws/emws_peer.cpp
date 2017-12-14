@@ -19,7 +19,6 @@ EMWSPeer::WriteMode EMWSPeer::get_write_mode() const {
 }
 
 void EMWSPeer::read_msg(uint8_t *p_data, uint32_t p_size) {
-	WARN_PRINTS(String("Writing: ") + itos(p_size));
 	in_buffer.write((uint8_t *)&p_size, 4);
 	in_buffer.write(p_data, p_size);
 	queue_count++;
@@ -58,7 +57,6 @@ Error EMWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) const {
 	r_buffer_size = 0;
 
 	in_buffer.read((uint8_t *)&to_read, 4);
-	WARN_PRINTS(String("Reading: ") + itos(to_read));
 	--queue_count;
 	left = in_buffer.data_left();
 
