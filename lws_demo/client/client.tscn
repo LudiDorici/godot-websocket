@@ -41,7 +41,6 @@ alignment = 0
 
 [node name="Connect" type="HBoxContainer" parent="Panel/VBoxContainer"]
 
-editor/display_folded = true
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
@@ -127,7 +126,6 @@ align = 1
 
 [node name="Send" type="HBoxContainer" parent="Panel/VBoxContainer"]
 
-editor/display_folded = true
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
@@ -149,7 +147,7 @@ anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_right = 977.0
+margin_right = 886.0
 margin_bottom = 24.0
 rect_pivot_offset = Vector2( 0, 0 )
 rect_clip_content = false
@@ -163,6 +161,30 @@ caret_blink = false
 caret_blink_speed = 0.65
 context_menu_enabled = true
 _sections_unfolded = [ "Placeholder", "Size Flags" ]
+
+[node name="Mode" type="OptionButton" parent="Panel/VBoxContainer/Send"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 890.0
+margin_right = 977.0
+margin_bottom = 24.0
+rect_pivot_offset = Vector2( 0, 0 )
+rect_clip_content = false
+mouse_filter = 0
+size_flags_horizontal = 1
+size_flags_vertical = 1
+toggle_mode = false
+enabled_focus_mode = 2
+shortcut = null
+group = null
+text = "BINARY"
+flat = false
+align = 0
+selected = -1
+items = [  ]
 
 [node name="SendBtn" type="Button" parent="Panel/VBoxContainer/Send"]
 
@@ -211,6 +233,8 @@ _sections_unfolded = [ "Size Flags" ]
 script = ExtResource( 1 )
 
 [connection signal="toggled" from="Panel/VBoxContainer/Connect/ConnectBtn" to="Client" method="_on_ConnectBtn_toggled"]
+
+[connection signal="item_selected" from="Panel/VBoxContainer/Send/Mode" to="Client" method="_on_Mode_item_selected"]
 
 [connection signal="pressed" from="Panel/VBoxContainer/Send/SendBtn" to="Client" method="_on_SendBtn_pressed"]
 
