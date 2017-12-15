@@ -41,7 +41,7 @@ func _client_disconnected(id):
 
 func _client_receive(id):
 	var data = _clients[id].recv()
-	Utils._log(_log_dest, "Data from %s BINARY: %s: %s" % [id, _clients[id].is_binary_frame(), str(data)])
+	Utils._log(_log_dest, "Data from %s BINARY: %s: %s" % [id, not _clients[id].was_string_packet(), str(data)])
 
 func _on_ListenBtn_toggled( pressed ):
 	if pressed:

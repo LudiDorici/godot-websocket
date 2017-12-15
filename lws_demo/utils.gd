@@ -19,12 +19,13 @@ class Peer extends Object:
 	func recv():
 		if _packet_peer.get_available_packet_count() == 0:
 			return null
-		if _write_mode == WebSocketPeer.WRITE_MODE_BINARY:
-			# Receive as Godot encoded variables
-			return _packet_peer.get_var()
+		var packet = _packet_peer.get_packet()
+		if _packet_peer.was_string_packet():
+			# Interpret as a string
+			return packet.get_string_from_utf8()
 		else:
-			# Receive as UTF-8 string
-			return _packet_peer.get_packet().get_string_from_utf8()
+			# Interpret as a Godot encoded var (it could actually be any binary data)
+			return bytes2var(packet)
 
 	func get_available_packet_count():
 		return _packet_peer.get_available_packet_count()
@@ -33,8 +34,8 @@ class Peer extends Object:
 		_write_mode = mode
 		_packet_peer.set_write_mode(mode)
 
-	func is_binary_frame():
-		return _packet_peer.is_binary_frame()
+	func was_string_packet():
+		return _packet_peer.was_string_packet()
 
 	func close():
 		_packet_peer.close()
