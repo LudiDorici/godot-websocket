@@ -5,24 +5,24 @@
 #include "core/io/ip.h"
 
 extern "C" {
-void _esws_on_connect(void *obj, char *proto) {
+EMSCRIPTEN_KEEPALIVE void _esws_on_connect(void *obj, char *proto) {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 	client->emit_signal("connection_established", String(proto));
 }
 
-void _esws_on_message(void *obj, uint8_t *p_data, int p_data_size, int p_is_string)  {
+EMSCRIPTEN_KEEPALIVE void _esws_on_message(void *obj, uint8_t *p_data, int p_data_size, int p_is_string)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 
 	static_cast<EMWSPeer *>(*client->get_peer())->read_msg(p_data, p_data_size, p_is_string == 1);
 	client->emit_signal("data_received");
 }
 
-void _esws_on_error(void *obj)  {
+EMSCRIPTEN_KEEPALIVE void _esws_on_error(void *obj)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 	client->emit_signal("connection_error");
 }
 
-void _esws_on_close(void *obj, int code, char* reason, int was_clean)  {
+EMSCRIPTEN_KEEPALIVE void _esws_on_close(void *obj, int code, char* reason, int was_clean)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 	client->emit_signal("connection_closed");
 }
