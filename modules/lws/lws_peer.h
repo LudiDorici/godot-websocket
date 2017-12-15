@@ -20,10 +20,10 @@ private:
 		PACKET_BUFFER_SIZE = 65536 - 5 // 4 bytes for the size, 1 for the type
 	};
 
-	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
+	uint8_t packet_buffer[PACKET_BUFFER_SIZE];
 	struct lws *wsi;
 	WriteMode write_mode;
-	mutable bool _was_string;
+	bool _was_string;
 
 public:
 	struct PeerData {
@@ -38,7 +38,7 @@ public:
 	};
 
 	virtual int get_available_packet_count() const;
-	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const;
+	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size);
 	virtual Error put_packet(const uint8_t *p_buffer, int p_buffer_size);
 	virtual int get_max_packet_size() const { return PACKET_BUFFER_SIZE; };
 

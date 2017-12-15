@@ -87,7 +87,7 @@ Error LWSPeer::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
 	return OK;
 };
 
-Error LWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) const {
+Error LWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) {
 
 	ERR_FAIL_COND_V(!is_connected_to_host(), FAILED);
 

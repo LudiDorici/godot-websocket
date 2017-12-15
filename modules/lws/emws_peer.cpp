@@ -55,7 +55,7 @@ Error EMWSPeer::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
 	return OK;
 };
 
-Error EMWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) const {
+Error EMWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) {
 
 	if (queue_count == 0)
 		return ERR_UNAVAILABLE;
