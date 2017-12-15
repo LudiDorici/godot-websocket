@@ -22,7 +22,7 @@ protected:
 		ClassDB::bind_method(D_METHOD("get_write_mode"), &WebSocketPeer::get_write_mode);
 		ClassDB::bind_method(D_METHOD("set_write_mode", "mode"), &WebSocketPeer::set_write_mode);
 		ClassDB::bind_method(D_METHOD("is_connected_to_host"), &WebSocketPeer::is_connected_to_host);
-		ClassDB::bind_method(D_METHOD("is_binary_frame"), &WebSocketPeer::is_binary_frame);
+		ClassDB::bind_method(D_METHOD("was_string_packet"), &WebSocketPeer::was_string_packet);
 		ClassDB::bind_method(D_METHOD("close"), &WebSocketPeer::close);
 
 		BIND_ENUM_CONSTANT(WRITE_MODE_TEXT);
@@ -44,7 +44,7 @@ public:
 	virtual bool is_connected_to_host() const = 0;
 	virtual IP_Address get_connected_host() const = 0;
 	virtual uint16_t get_connected_port() const = 0;
-	virtual bool is_binary_frame() const = 0;
+	virtual bool was_string_packet() const = 0;
 
 	WebSocketPeer() {};
 	~WebSocketPeer() {};

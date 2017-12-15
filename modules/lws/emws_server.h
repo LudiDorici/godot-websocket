@@ -1,15 +1,15 @@
-#ifndef ESWSSERVER_H
-#define ESWSSERVER_H
+#ifndef EMWSSERVER_H
+#define EMWSSERVER_H
 
 #ifdef JAVASCRIPT_ENABLED
 
 #include "core/reference.h"
 #include "websocket_server.h"
-#include "esws_peer.h"
+#include "emws_peer.h"
 
-class ESWSServer : public WebSocketServer {
+class EMWSServer : public WebSocketServer {
 
-	GDCIIMPL(ESWSServer, WebSocketServer);
+	GDCIIMPL(EMWSServer, WebSocketServer);
 
 public:
 	Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>());
@@ -20,8 +20,8 @@ public:
 	virtual void poll();
 	virtual PoolVector<String> get_protocols() const;
 
-	ESWSServer();
-	~ESWSServer();
+	EMWSServer();
+	~EMWSServer();
 };
 
 #endif

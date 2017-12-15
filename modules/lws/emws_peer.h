@@ -1,27 +1,36 @@
-#ifndef ESWSPEER_H
-#define ESWSPEER_H
+#ifndef EMWSPEER_H
+#define EMWSPEER_H
 
 #ifdef JAVASCRIPT_ENABLED
 
 #include "core/error_list.h"
 #include "core/io/packet_peer.h"
 #include "core/ring_buffer.h"
+#include "emscripten.h"
 #include "websocket_peer.h"
 
-class ESWSPeer : public WebSocketPeer {
+class EMWSPeer : public WebSocketPeer {
 
-	GDCIIMPL(ESWSPeer, WebSocketPeer);
+	GDCIIMPL(EMWSPeer, WebSocketPeer);
 
 private:
 
 	enum {
-		PACKET_BUFFER_SIZE = 65536 - 4 // 4 bytes for the size
+		PACKET_BUFFER_SIZE = 65536 - 5 // 4 bytes for the size, 1 for for type
 	};
 
+	int peer_sock;
 	WriteMode write_mode;
+
+	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
+	mutable RingBuffer<uint8_t> in_buffer;
+	mutable int queue_count;
+	mutable bool _was_string;
 
 public:
 
+	void read_msg(uint8_t *p_data, uint32_t p_size, bool p_is_string);
+	void set_sock(int sock);
 	virtual int get_available_packet_count() const;
 	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const;
 	virtual Error put_packet(const uint8_t *p_buffer, int p_buffer_size);
@@ -34,14 +43,14 @@ public:
 
 	virtual WriteMode get_write_mode() const;
 	virtual void set_write_mode(WriteMode p_mode);
-	virtual bool is_binary_frame() const;
+	virtual bool was_string_packet() const;
 
 	void set_wsi(struct lws *wsi);
 	Error read_wsi(void *in, size_t len);
 	Error write_wsi();
 
-	ESWSPeer();
-	~ESWSPeer();
+	EMWSPeer();
+	~EMWSPeer();
 };
 
 #endif // JAVASCRIPT_ENABLED

@@ -3,34 +3,16 @@
 #include "lws_client.h"
 #include "core/io/ip.h"
 
-Error LWSClient::connect_to_host(String p_host, uint16_t p_port, PoolVector<String> p_protocols) {
+Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, bool p_ssl, PoolVector<String> p_protocols) {
 
 	disconnect_from_host();
 
-	String host = p_host;
-	String path = "/";
 	IP_Address addr;
-	int p_len = -1;
-	bool ssl = false;
-	if (host.begins_with("wss://")) {
-		ssl = true; // we should implement this
-		host = host.substr(6, host.length() - 6);
-	} else {
-		ssl = false;
-		if (host.begins_with("ws://"))
-			host = host.substr(5, host.length() - 5);
-	}
 
-	p_len = host.find("/");
-	if (p_len != -1) {
-		path = host.substr(p_len, host.length() - p_len);
-		host = host.substr(0, p_len);
-	}
-
-	if (!host.is_valid_ip_address()) {
-		addr = IP::get_singleton()->resolve_hostname(host);
+	if (!p_host.is_valid_ip_address()) {
+		addr = IP::get_singleton()->resolve_hostname(p_host);
 	} else {
-		addr = host;
+		addr = p_host;
 	}
 
 	ERR_FAIL_COND_V(!addr.is_valid(), ERR_INVALID_PARAMETER);
@@ -63,8 +45,8 @@ Error LWSClient::connect_to_host(String p_host, uint16_t p_port, PoolVector<Stri
 	char pbuf[2048];
 	String addr_str = (String)addr;
 	strncpy(abuf, addr_str.ascii().get_data(), 1024);
-	strncpy(hbuf, host.utf8().get_data(), 1024);
-	strncpy(pbuf, path.utf8().get_data(), 2048);
+	strncpy(hbuf, p_host.utf8().get_data(), 1024);
+	strncpy(pbuf, p_path.utf8().get_data(), 2048);
 
 	i.context = context;
 	i.protocol = protocol_string.get_data();
@@ -72,7 +54,7 @@ Error LWSClient::connect_to_host(String p_host, uint16_t p_port, PoolVector<Stri
 	i.host = hbuf;
 	i.path = pbuf;
 	i.port = p_port;
-	i.ssl_connection = ssl;
+	i.ssl_connection = p_ssl;
 
 	lws_client_connect_via_info(&i);
 	return OK;
