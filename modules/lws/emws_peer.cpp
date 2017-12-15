@@ -18,8 +18,16 @@ EMWSPeer::WriteMode EMWSPeer::get_write_mode() const {
 	return write_mode;
 }
 
-void EMWSPeer::read_msg(uint8_t *p_data, uint32_t p_size) {
+void EMWSPeer::read_msg(uint8_t *p_data, uint32_t p_size, bool p_is_string) {
+
+	if (in_buffer.space_left() < p_size+5) {
+		ERR_EXPLAIN("Buffer full! Dropping data");
+		ERR_FAIL();
+	}
+
+	uint8_t is_string = p_is_string ? 1 : 0;
 	in_buffer.write((uint8_t *)&p_size, 4);
+	in_buffer.write((uint8_t *)&is_string, 1);
 	in_buffer.write(p_data, p_size);
 	queue_count++;
 }
@@ -54,17 +62,20 @@ Error EMWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) const {
 
 	uint32_t to_read = 0;
 	uint32_t left = 0;
+	uint8_t is_string = 0;
 	r_buffer_size = 0;
 
 	in_buffer.read((uint8_t *)&to_read, 4);
 	--queue_count;
 	left = in_buffer.data_left();
 
-	if(left < to_read) {
+	if(left < to_read+1) {
 		in_buffer.advance_read(left);
 		return FAILED;
 	}
 
+	in_buffer.read(&is_string, 1);
+	_was_string = is_string == 1;
 	in_buffer.read(packet_buffer, to_read);
 	*r_buffer = packet_buffer;
 	r_buffer_size = to_read;
@@ -77,11 +88,9 @@ int EMWSPeer::get_available_packet_count() const {
 	return queue_count;
 };
 
-bool EMWSPeer::is_binary_frame() const {
+bool EMWSPeer::was_string_packet() const {
 
-	ERR_FAIL_COND_V(!is_connected_to_host(), false);
-
-	return false;
+	return _was_string;
 };
 
 bool EMWSPeer::is_connected_to_host() const {
@@ -116,6 +125,7 @@ uint16_t EMWSPeer::get_connected_port() const {
 EMWSPeer::EMWSPeer() {
 	peer_sock = -1;
 	queue_count = 0;
+	_was_string = false;
 	in_buffer.resize(16);
 	write_mode = WRITE_MODE_BINARY;
 };

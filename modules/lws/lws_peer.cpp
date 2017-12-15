@@ -20,9 +20,10 @@ Error LWSPeer::read_wsi(void *in, size_t len) {
 	ERR_FAIL_COND_V(!is_connected_to_host(), FAILED);
 
 	PeerData *peer_data = (PeerData *)(lws_wsi_user(wsi));
-	int size = peer_data->in_size;
+	uint32_t size = peer_data->in_size;
+	uint8_t is_string = lws_frame_is_binary(wsi) ? 0 : 1;
 
-	if (peer_data->rbr.space_left() < len) {
+	if (peer_data->rbr.space_left() < len+5) {
 		ERR_EXPLAIN("Buffer full! Dropping data");
 		ERR_FAIL_V(FAILED);
 	}
@@ -32,7 +33,8 @@ Error LWSPeer::read_wsi(void *in, size_t len) {
 
 	peer_data->in_size = size;
 	if (lws_is_final_fragment(wsi)) {
-		peer_data->rbr.write((uint8_t *)(&size), 4);
+		peer_data->rbr.write((uint8_t *)&size, 4);
+		peer_data->rbr.write((uint8_t *)&is_string, 1);
 		peer_data->rbr.write(peer_data->input_buffer, size);
 		peer_data->in_count++;
 		peer_data->in_size = 0;
@@ -96,20 +98,23 @@ Error LWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) const {
 
 	uint32_t to_read = 0;
 	uint32_t left = 0;
+	uint8_t is_string = 0;
 	r_buffer_size = 0;
 
 	peer_data->rbr.read((uint8_t *)&to_read, 4);
 	peer_data->in_count--;
 	left = peer_data->rbr.data_left();
 
-	if(left < to_read) {
+	if(left < to_read+1) {
 		peer_data->rbr.advance_read(left);
 		return FAILED;
 	}
 
+	peer_data->rbr.read(&is_string, 1);
 	peer_data->rbr.read(packet_buffer, to_read);
 	*r_buffer = packet_buffer;
 	r_buffer_size = to_read;
+	_was_string = is_string;
 
 	return OK;
 };
@@ -122,11 +127,9 @@ int LWSPeer::get_available_packet_count() const {
 	return ((PeerData *)lws_wsi_user(wsi))->in_count;
 };
 
-bool LWSPeer::is_binary_frame() const {
+bool LWSPeer::was_string_packet() const {
 
-	ERR_FAIL_COND_V(!is_connected_to_host(), false);
-
-	return lws_frame_is_binary(wsi);
+	return _was_string;
 };
 
 bool LWSPeer::is_connected_to_host() const {
@@ -156,6 +159,7 @@ uint16_t LWSPeer::get_connected_port() const {
 
 LWSPeer::LWSPeer() {
 	wsi = NULL;
+	_was_string = false;
 	write_mode = WRITE_MODE_BINARY;
 };
 

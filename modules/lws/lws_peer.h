@@ -17,12 +17,13 @@ class LWSPeer : public WebSocketPeer {
 private:
 
 	enum {
-		PACKET_BUFFER_SIZE = 65536 - 4 // 4 bytes for the size
+		PACKET_BUFFER_SIZE = 65536 - 5 // 4 bytes for the size, 1 for the type
 	};
 
 	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
 	struct lws *wsi;
 	WriteMode write_mode;
+	mutable bool _was_string;
 
 public:
 	struct PeerData {
@@ -48,7 +49,7 @@ public:
 
 	virtual WriteMode get_write_mode() const;
 	virtual void set_write_mode(WriteMode p_mode);
-	virtual bool is_binary_frame() const;
+	virtual bool was_string_packet() const;
 
 	void set_wsi(struct lws *wsi);
 	Error read_wsi(void *in, size_t len);

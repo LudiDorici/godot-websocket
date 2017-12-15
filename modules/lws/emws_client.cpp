@@ -10,10 +10,10 @@ void _esws_on_connect(void *obj, char *proto) {
 	client->emit_signal("connection_established", String(proto));
 }
 
-void _esws_on_message(void *obj, uint8_t *p_data, int p_data_size)  {
+void _esws_on_message(void *obj, uint8_t *p_data, int p_data_size, int p_is_string)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 
-	static_cast<EMWSPeer *>(*client->get_peer())->read_msg(p_data, p_data_size);
+	static_cast<EMWSPeer *>(*client->get_peer())->read_msg(p_data, p_data_size, p_is_string == 1);
 	client->emit_signal("data_received");
 }
 
@@ -63,6 +63,7 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 		// Listen for messages
 		socket.addEventListener("message", function (event) {
 			var buffer;
+			var is_string = 0;
 			if (event.data instanceof ArrayBuffer) {
 
 				buffer = new Uint8Array(event.data);
@@ -74,6 +75,7 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 
 			} else if (typeof event.data === "string") {
 
+				is_string = 1;
 				var enc = new TextEncoder("utf-8");
 				buffer = new Uint8Array(enc.encode(event.data));
 
@@ -88,8 +90,8 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 			Module.HEAPU8.set(buffer, out);
 			Module.ccall("_esws_on_message",
 					"void",
-					["number", "number", "number"],
-					[$0, out, len]
+					["number", "number", "number", "number"],
+					[$0, out, len, is_string]
 			);
 			Module._free(out);
 		});

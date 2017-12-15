@@ -16,7 +16,7 @@ class EMWSPeer : public WebSocketPeer {
 private:
 
 	enum {
-		PACKET_BUFFER_SIZE = 65536 - 4 // 4 bytes for the size
+		PACKET_BUFFER_SIZE = 65536 - 5 // 4 bytes for the size, 1 for for type
 	};
 
 	int peer_sock;
@@ -25,10 +25,11 @@ private:
 	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
 	mutable RingBuffer<uint8_t> in_buffer;
 	mutable int queue_count;
+	mutable bool _was_string;
 
 public:
 
-	void read_msg(uint8_t *p_data, uint32_t p_size);
+	void read_msg(uint8_t *p_data, uint32_t p_size, bool p_is_string);
 	void set_sock(int sock);
 	virtual int get_available_packet_count() const;
 	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const;
@@ -42,7 +43,7 @@ public:
 
 	virtual WriteMode get_write_mode() const;
 	virtual void set_write_mode(WriteMode p_mode);
-	virtual bool is_binary_frame() const;
+	virtual bool was_string_packet() const;
 
 	void set_wsi(struct lws *wsi);
 	Error read_wsi(void *in, size_t len);
