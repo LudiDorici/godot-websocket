@@ -22,17 +22,17 @@ private:
 	int peer_sock;
 	WriteMode write_mode;
 
-	mutable uint8_t packet_buffer[PACKET_BUFFER_SIZE];
-	mutable RingBuffer<uint8_t> in_buffer;
-	mutable int queue_count;
-	mutable bool _was_string;
+	uint8_t packet_buffer[PACKET_BUFFER_SIZE];
+	RingBuffer<uint8_t> in_buffer;
+	int queue_count;
+	bool _was_string;
 
 public:
 
 	void read_msg(uint8_t *p_data, uint32_t p_size, bool p_is_string);
 	void set_sock(int sock);
 	virtual int get_available_packet_count() const;
-	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size) const;
+	virtual Error get_packet(const uint8_t **r_buffer, int &r_buffer_size);
 	virtual Error put_packet(const uint8_t *p_buffer, int p_buffer_size);
 	virtual int get_max_packet_size() const { return PACKET_BUFFER_SIZE; };
 

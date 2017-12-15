@@ -1,5 +1,5 @@
 #ifndef WEBSOCKET_CLIENT_H
-#define WEBSOCKET_CLINET_H
+#define WEBSOCKET_CLIENT_H
 
 #include "core/error_list.h"
 #include "websocket_peer.h"
