@@ -169,17 +169,21 @@ PoolVector<uint8_t> WebSocketMultiplayerPeer::_make_pkt(uint32_t p_type, int32_t
 
 void WebSocketMultiplayerPeer::_send_add(int32_t p_peer_id) {
 
+	// First of all, confirm the ID!
+	_send_sys(get_peer(p_peer_id), SYS_ID, p_peer_id);
+
+	// Then send the server peer (which will trigger connection_succeded in client)
+	_send_sys(get_peer(p_peer_id), SYS_ADD, 1);
+
 	for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
 		uint32_t id = E->key();
-		if (p_peer_id == id) {
-			_send_sys(get_peer(id), SYS_ID, p_peer_id);
-		}
-		else {
-			// Send new peer to others
-			_send_sys(get_peer(id), SYS_ADD, p_peer_id);
-			// Send others to new peer
-			_send_sys(get_peer(p_peer_id), SYS_ADD, id);
-		}
+		if (p_peer_id == id)
+			continue; // Skip the newwly added peer (already confirmed)
+
+		// Send new peer to others
+		_send_sys(get_peer(id), SYS_ADD, p_peer_id);
+		// Send others to new peer
+		_send_sys(get_peer(p_peer_id), SYS_ADD, id);
 	}
 }
 
@@ -301,6 +305,8 @@ void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer, u
 			case SYS_ADD: // Add peer
 				_peer_map[id] = Ref<WebSocketPeer>();
 				emit_signal("peer_connected", id);
+				if (id == 1) // We just connected to the server
+					emit_signal("connection_succeeded");
 				break;
 
 			case SYS_DEL: // Remove peer
@@ -309,7 +315,6 @@ void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer, u
 				break;
 			case SYS_ID: // Helo, server assigned ID
 				_peer_id = id;
-				emit_signal("connection_succeeded");
 				break;
 			default:
 				ERR_EXPLAIN("Invalid multiplayer message");
