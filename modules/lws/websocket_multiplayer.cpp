@@ -43,15 +43,13 @@ void WebSocketMultiplayerPeer::_bind_methods() {
 int WebSocketMultiplayerPeer::get_available_packet_count() const {
 
 	ERR_FAIL_COND_V(!_is_multiplayer, ERR_UNCONFIGURED);
-	ERR_FAIL_COND_V(!get_peer(_target_peer).is_valid(), 0);
 
-	return get_peer(_target_peer)->get_available_packet_count();
+	return _incoming_packets.size();
 }
 
 int WebSocketMultiplayerPeer::get_max_packet_size() const {
 
 	ERR_FAIL_COND_V(!_is_multiplayer, ERR_UNCONFIGURED);
-	ERR_FAIL_COND_V(!get_peer(_target_peer).is_valid(), ERR_UNCONFIGURED);
 
 	return MAX_PACKET_SIZE;
 }
@@ -78,7 +76,7 @@ Error WebSocketMultiplayerPeer::get_packet(const uint8_t **r_buffer, int &r_buff
 Error WebSocketMultiplayerPeer::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
 
 	ERR_FAIL_COND_V(!_is_multiplayer, ERR_UNCONFIGURED);
-	ERR_FAIL_COND_V(!get_peer(_target_peer).is_valid(), ERR_UNCONFIGURED);
+	ERR_FAIL_COND_V(!get_peer(_target_peer).is_valid(), ERR_DOES_NOT_EXIST);
 
 	PoolVector<uint8_t> buffer;
 	buffer.resize(p_buffer_size + PROTO_SIZE);
