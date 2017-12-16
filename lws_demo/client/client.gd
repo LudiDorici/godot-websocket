@@ -26,7 +26,7 @@ func _exit_tree():
 	_client.disconnect_from_host()
 
 func _process(delta):
-	if _client.is_connected_to_host() or _client.is_connecting_to_host():
+	if _client.get_connection_status() != WebSocketClient.CONNECTION_DISCONNECTED:
 		_client.poll()
 
 func _client_connected(protocol):
