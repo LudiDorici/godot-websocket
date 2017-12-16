@@ -76,14 +76,13 @@ Error WebSocketMultiplayerPeer::get_packet(const uint8_t **r_buffer, int &r_buff
 Error WebSocketMultiplayerPeer::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
 
 	ERR_FAIL_COND_V(!_is_multiplayer, ERR_UNCONFIGURED);
-	ERR_FAIL_COND_V(!get_peer(_target_peer).is_valid(), ERR_DOES_NOT_EXIST);
 
 	PoolVector<uint8_t> buffer = _make_pkt(SYS_NONE, get_unique_id(), _target_peer, p_buffer, p_buffer_size);
 
 	if (is_server()) {
 		return _server_relay(1, _target_peer, &(buffer.read()[0]), buffer.size());
 	} else {
-		return get_peer(_target_peer)->put_packet(&(buffer.read()[0]), buffer.size());
+		return get_peer(1)->put_packet(&(buffer.read()[0]), buffer.size());
 	}
 }
 
