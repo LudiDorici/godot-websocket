@@ -79,7 +79,8 @@ Error WebSocketMultiplayerPeer::put_packet(const uint8_t *p_buffer, int p_buffer
 	ERR_FAIL_COND_V(!get_peer(_target_peer).is_valid(), ERR_DOES_NOT_EXIST);
 
 	PoolVector<uint8_t> buffer;
-	buffer.resize(p_buffer_size + PROTO_SIZE);
+	uint32_t size = PROTO_SIZE + p_buffer_size;
+	buffer.resize(size);
 	{
 		uint8_t type = 0; // 0 is payload data
 		uint32_t from = get_unique_id();
@@ -89,7 +90,7 @@ Error WebSocketMultiplayerPeer::put_packet(const uint8_t *p_buffer, int p_buffer
 		copymem(&bw[5], &_target_peer, 4);
 		copymem(&bw[PROTO_SIZE], p_buffer, p_buffer_size);
 	}
-	return get_peer(_target_peer)->put_packet(&(buffer.read()[0]), p_buffer_size);
+	return get_peer(_target_peer)->put_packet(&(buffer.read()[0]), size);
 
 }
 
@@ -192,7 +193,7 @@ void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer) {
 		packet.size = size;
 		packet.source = from;
 		packet.destination = to;
-		copymem(&type, &in_buffer[PROTO_SIZE], size);
+		copymem(packet.data, &in_buffer[PROTO_SIZE], size);
 		_incoming_packets.push_back(packet);
 	} else if (!is_server()) {
 
