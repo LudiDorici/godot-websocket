@@ -162,17 +162,30 @@ void WebSocketMultiplayerPeer::_send_del(uint32_t p_peer_id) {
 	}
 }
 
-void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer) {
+void WebSocketMultiplayerPeer::_store_pkt(uint32_t p_source, uint32_t p_dest, const uint8_t *p_data, uint32_t p_data_size) {
+	Packet packet;
+	packet.data = (uint8_t *)memalloc(p_data_size);
+	packet.size = p_data_size;
+	packet.source = p_source;
+	packet.destination = p_dest;
+	copymem(packet.data, &p_data[PROTO_SIZE], p_data_size);
+	_incoming_packets.push_back(packet);
+}
+
+void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer, uint32_t p_peer_id) {
 
 	ERR_FAIL_COND(!p_peer.is_valid());
 
 	const uint8_t *in_buffer;
 	int size = 0;
+	int data_size = 0;
 
 	Error err = p_peer->get_packet(&in_buffer, size);
 
 	ERR_FAIL_COND(err != OK);
 	ERR_FAIL_COND(size < PROTO_SIZE);
+
+	data_size = size - PROTO_SIZE;
 
 	uint8_t type = 0;
 	uint32_t from = 0;
@@ -180,33 +193,70 @@ void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer) {
 	copymem(&type, in_buffer, 1);
 	copymem(&from, &in_buffer[1], 4);
 	copymem(&to, &in_buffer[5], 4);
-	size -= PROTO_SIZE;
-	if (type == 0) { // payload
-		Packet packet;
-		packet.data = (uint8_t *)memalloc(size);
-		packet.size = size;
-		packet.source = from;
-		packet.destination = to;
-		copymem(packet.data, &in_buffer[PROTO_SIZE], size);
-		_incoming_packets.push_back(packet);
-	} else if (!is_server()) {
 
-		ERR_FAIL_COND(size < 4);
+	if (is_server()) { // Server can resend
+
+		ERR_FAIL_COND(type != SYS_NONE); // Only server sends sys messages
+		ERR_FAIL_COND(from != p_peer_id); // Someone is cheating
+
+		if (to == 1) { // This is for the server
+
+			_store_pkt(from, to, in_buffer, data_size);
+
+		} else if (to == 0) {
+
+			// Send all but sender
+			for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
+				if(E->key() != p_peer_id)
+					E->get()->put_packet(in_buffer, size);
+			}
+			if (from != _peer_id)
+				_store_pkt(from, to, in_buffer, data_size);
+
+		} else if (to < 0) {
+
+			// Send all but one and sender
+			for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
+				if(E->key() != from && E->key() != -p_peer_id)
+					E->get()->put_packet(in_buffer, size);
+			}
+			if (from != _peer_id && _peer_id != -p_peer_id)
+				_store_pkt(from, to, in_buffer, data_size);
+
+		} else {
+
+			// Send to specific peer
+			ERR_FAIL_COND(!_peer_map.has(to));
+			get_peer(to)->put_packet(in_buffer, size);
+
+		}
+
+	} else {
+
+		if(type == SYS_NONE) { // Payload message
+
+			_store_pkt(from, to, in_buffer, data_size);
+			return;
+
+		}
+
+		// System message
+		ERR_FAIL_COND(data_size < 4);
 		int id = 0;
 		copymem(&id, &in_buffer[PROTO_SIZE], 4);
 
 		switch(type) {
 
-			case 1: // Add peer
+			case SYS_ADD: // Add peer
 				_peer_map[id] = Ref<WebSocketPeer>();
 				emit_signal("peer_connected", id);
 				break;
 
-			case 2: // Remove peer
+			case SYS_DEL: // Remove peer
 				_peer_map.erase(id);
 				emit_signal("peer_disconnected", id);
 				break;
-			case 3: // Helo, server assigned ID
+			case SYS_ID: // Helo, server assigned ID
 				_peer_id = id;
 				emit_signal("connection_succeeded");
 				break;

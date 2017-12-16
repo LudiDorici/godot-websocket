@@ -53,7 +53,7 @@ bool WebSocketClient::is_server() const {
 void WebSocketClient::_on_peer_packet() {
 
 	if (_is_multiplayer) {
-		_process_multiplayer(get_peer(1));
+		_process_multiplayer(get_peer(1), 1);
 	} else {
 		emit_signal("data_received");
 	}

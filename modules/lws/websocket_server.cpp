@@ -39,7 +39,7 @@ bool WebSocketServer::is_server() const {
 void WebSocketServer::_on_peer_packet(uint32_t p_peer_id) {
 
 	if (_is_multiplayer) {
-		_process_multiplayer(get_peer(p_peer_id));
+		_process_multiplayer(get_peer(p_peer_id), p_peer_id);
 	} else {
 		emit_signal("data_received", p_peer_id);
 	}
