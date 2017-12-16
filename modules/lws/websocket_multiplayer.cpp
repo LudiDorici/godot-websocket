@@ -5,7 +5,6 @@ WebSocketMultiplayerPeer::WebSocketMultiplayerPeer() {
 	_is_multiplayer = false;
 	_peer_id = 0;
 	_target_peer = 0;
-	_packet_peer = 0;
 	_refusing = false;
 }
 
@@ -39,27 +38,20 @@ int WebSocketMultiplayerPeer::get_max_packet_size() const {
 
 Error WebSocketMultiplayerPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) {
 
-	ERR_FAIL_COND_V(!_is_multiplayer, ERR_UNCONFIGURED);
-	ERR_FAIL_COND_V(!get_peer(_target_peer).is_valid(), ERR_UNCONFIGURED);
-
-	const uint8_t *in_buffer;
-	int size = 0;
 	r_buffer_size = 0;
+	ERR_FAIL_COND_V(!_is_multiplayer, ERR_UNCONFIGURED);
 
-	Error err = get_peer(_target_peer)->get_packet(&in_buffer, size);
-	if (err != OK)
-		return err;
+	if (_current_packet.data != NULL) {
+		memfree(_current_packet.data);
+		_current_packet.data = NULL;
+	}
 
-	ERR_FAIL_COND_V(size<12, ERR_INVALID_DATA);
+	_current_packet = _incoming_packets.front()->get();
+	_incoming_packets.pop_front();
 
-	uint32_t type = 0;
-	uint32_t from = 0;
-	uint32_t to = 0;
-	copymem(&type, in_buffer, 4);
-	copymem(&from, &in_buffer[4], 4);
-	copymem(&to, &in_buffer[8], 4);
-	r_buffer_size = size-12;
-	*r_buffer = &in_buffer[12];
+	*r_buffer = _current_packet.data;
+	r_buffer_size = _current_packet.size;
+
 	return OK;
 }
 
@@ -98,7 +90,10 @@ void WebSocketMultiplayerPeer::set_target_peer(int p_target_peer) {
 
 int WebSocketMultiplayerPeer::get_packet_peer() const {
 
-	return _packet_peer;
+	ERR_FAIL_COND_V(!_is_multiplayer, 1);
+	ERR_FAIL_COND_V(_incoming_packets.size() == 0, 1);
+
+	return _incoming_packets.front()->get().source;
 }
 
 bool WebSocketMultiplayerPeer::is_server() const {
@@ -121,10 +116,39 @@ bool WebSocketMultiplayerPeer::is_refusing_new_connections() const {
 	return _refusing;
 }
 
+void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer) {
+
+	ERR_FAIL_COND(p_peer.is_valid());
+
+	const uint8_t *in_buffer;
+	int size = 0;
+
+	Error err = p_peer->get_packet(&in_buffer, size);
+
+	ERR_FAIL_COND(err != OK);
+	ERR_FAIL_COND(size < 12);
+
+	uint32_t type = 0;
+	uint32_t from = 0;
+	uint32_t to = 0;
+	copymem(&type, in_buffer, 4);
+	copymem(&from, &in_buffer[4], 4);
+	copymem(&to, &in_buffer[8], 4);
+	if (type == 0) { // payload
+		Packet packet;
+		packet.data = (uint8_t *)memalloc(size-12);
+		packet.size = size;
+		packet.source = from;
+		packet.destination = to;
+		_incoming_packets.push_back(packet);
+	}
+}
+
 void WebSocketMultiplayerPeer::_on_peer_packet(int p_peer_id) {
 
 	if (_is_multiplayer) {
 		// handle multiplayer here
+		_process_multiplayer(get_peer(p_peer_id));
 	} else {
 		emit_signal("data_received");
 	}

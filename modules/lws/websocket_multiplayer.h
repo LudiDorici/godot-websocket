@@ -23,7 +23,6 @@ protected:
 
 	bool _is_multiplayer;
 	int _target_peer;
-	int _packet_peer;
 	int _peer_id;
 	int _refusing;
 
@@ -49,6 +48,7 @@ public:
 	/* WebSocketPeer */
 	virtual Ref<WebSocketPeer> get_peer(int p_peer_id) const = 0;
 
+	void _process_multiplayer(Ref<WebSocketPeer> p_peer);
 	void _on_peer_packet(int p_peer_id);
 	void _on_connect(String p_protocol);
 	void _on_disconnect();
