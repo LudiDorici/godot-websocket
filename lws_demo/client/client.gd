@@ -31,7 +31,7 @@ func _process(delta):
 
 func _client_connected(protocol):
 	Utils._log(_log_dest, "Client just connected with protocol: %s" % protocol)
-	_peer = Utils.Peer.new(_client.get_peer())
+	_peer = Utils.Peer.new(_client.get_peer(1))
 	_peer.set_write_mode(_write_mode)
 
 func _client_disconnected():
