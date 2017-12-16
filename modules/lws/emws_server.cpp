@@ -3,7 +3,7 @@
 #include "emws_server.h"
 #include "core/os/os.h"
 
-Error EMWSServer::listen(int p_port, PoolVector<String> p_protocols) {
+Error EMWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_api) {
 
 	return FAILED;
 }

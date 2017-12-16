@@ -16,7 +16,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	Error connect_to_url(String p_url, PoolVector<String> p_protocols = PoolVector<String>(), bool p_mp_api = false);
+	Error connect_to_url(String p_url, PoolVector<String> p_protocols = PoolVector<String>(), bool gd_mp_api = false);
 
 	virtual void poll() = 0;
 	virtual Error connect_to_host(String p_host, String p_path, uint16_t p_port, bool p_ssl, PoolVector<String> p_protocol = PoolVector<String>()) = 0;

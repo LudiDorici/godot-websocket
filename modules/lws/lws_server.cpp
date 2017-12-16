@@ -25,7 +25,9 @@ uint32_t LWSServer::_gen_unique_id() const {
 	return hash;
 }
 
-Error LWSServer::listen(int p_port, PoolVector<String> p_protocols) {
+Error LWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_api) {
+
+	_is_multiplayer = gd_mp_api;
 
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof info);
@@ -73,7 +75,7 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			break;
 
 		case LWS_CALLBACK_ESTABLISHED: {
-			int id = _gen_unique_id();
+			uint8_t id = _gen_unique_id();
 
 			Ref<LWSPeer> peer = Ref<LWSPeer>(memnew(LWSPeer));
 			peer->set_wsi(wsi);

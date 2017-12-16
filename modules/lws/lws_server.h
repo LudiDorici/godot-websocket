@@ -20,7 +20,7 @@ private:
 	uint32_t _gen_unique_id() const;
 
 public:
-	Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>());
+	Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>(), bool gd_mp_api=false);
 	void stop();
 	bool is_listening() const;
 	bool has_peer(int p_id) const;

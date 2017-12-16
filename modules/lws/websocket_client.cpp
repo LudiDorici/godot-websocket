@@ -10,8 +10,8 @@ WebSocketClient::~WebSocketClient() {
 
 }
 
-Error WebSocketClient::connect_to_url(String p_url, PoolVector<String> p_protocols, bool p_mp_api) {
-	_is_multiplayer = p_mp_api;
+Error WebSocketClient::connect_to_url(String p_url, PoolVector<String> p_protocols, bool gd_mp_api) {
+	_is_multiplayer = gd_mp_api;
 
 	String host = p_url;
 	String path = "/";
@@ -93,7 +93,7 @@ void WebSocketClient::_on_error() {
 }
 
 void WebSocketClient::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("connect_to_url", "url", "protocols"), &WebSocketClient::connect_to_url, DEFVAL(PoolVector<String>()));
+	ClassDB::bind_method(D_METHOD("connect_to_url", "url", "protocols", "gd_mp_api"), &WebSocketClient::connect_to_url, DEFVAL(PoolVector<String>()), DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("disconnect_from_host"), &WebSocketClient::disconnect_from_host);
 	ClassDB::bind_method(D_METHOD("is_connected_to_host"), &WebSocketClient::is_connected_to_host);
 	ClassDB::bind_method(D_METHOD("is_connecting_to_host"), &WebSocketClient::is_connecting_to_host);
