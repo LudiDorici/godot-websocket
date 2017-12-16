@@ -7,6 +7,7 @@
 extern "C" {
 EMSCRIPTEN_KEEPALIVE void _esws_on_connect(void *obj, char *proto) {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
+	client->_is_connecting = false;
 	client->_on_connect(String(proto));
 }
 
@@ -19,11 +20,13 @@ EMSCRIPTEN_KEEPALIVE void _esws_on_message(void *obj, uint8_t *p_data, int p_dat
 
 EMSCRIPTEN_KEEPALIVE void _esws_on_error(void *obj)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
+	client->_is_connecting = false;
 	client->_on_error();
 }
 
 EMSCRIPTEN_KEEPALIVE void _esws_on_close(void *obj, int code, char* reason, int was_clean)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
+	client->_is_connecting = false;
 	client->_on_disconnect();
 }
 }
@@ -46,6 +49,7 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 
 	proto_string = proto_string.substr(0, proto_string.length()-1);
 
+	_is_connecting = true;
 	/* clang-format off */
 	int peer_sock = EM_ASM_INT({
 		var socket = new WebSocket(UTF8ToString($1), UTF8ToString($2).split(","));
@@ -133,14 +137,15 @@ Ref<WebSocketPeer> EMWSClient::get_peer(int p_peer_id) const {
 	return _peer;
 }
 
-bool EMWSClient::is_connected_to_host() const {
+NetworkedMultiplayerPeer::ConnectionStatus EMWSClient::get_connection_status() const {
 
-	return _peer->is_connected_to_host();
-};
+	if (_peer->is_connected_to_host())
+		return CONNECTION_CONNECTED;
 
-bool EMWSClient::is_connecting_to_host() const {
+	if (_is_connecting)
+		return CONNECTION_CONNECTING;
 
-	return false;
+	return CONNECTION_DISCONNECTED;
 };
 
 void EMWSClient::disconnect_from_host() {
@@ -159,6 +164,7 @@ uint16_t EMWSClient::get_connected_port() const {
 };
 
 EMWSClient::EMWSClient() {
+	_is_connecting = false;
 	_peer = Ref<EMWSPeer>(memnew(EMWSPeer));
 };
 

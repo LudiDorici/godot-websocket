@@ -24,10 +24,8 @@ public:
 	virtual IP_Address get_connected_host() const = 0;
 	virtual uint16_t get_connected_port() const = 0;
 
-	virtual bool is_connected_to_host() const = 0;
-	virtual bool is_connecting_to_host() const = 0;
 	virtual bool is_server() const;
-	ConnectionStatus get_connection_status() const;
+	virtual ConnectionStatus get_connection_status() const = 0;
 
 	void _on_peer_packet();
 	void _on_connect(String p_protocol);

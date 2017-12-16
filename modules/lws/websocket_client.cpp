@@ -50,17 +50,6 @@ bool WebSocketClient::is_server() const {
 	return false;
 }
 
-NetworkedMultiplayerPeer::ConnectionStatus WebSocketClient::get_connection_status() const {
-
-	if (is_connected_to_host())
-		return CONNECTION_CONNECTED;
-
-	if (is_connecting_to_host())
-		return CONNECTION_CONNECTING;
-
-	return CONNECTION_DISCONNECTED;
-}
-
 void WebSocketClient::_on_peer_packet() {
 
 	if (_is_multiplayer) {
@@ -100,8 +89,6 @@ void WebSocketClient::_on_error() {
 void WebSocketClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("connect_to_url", "url", "protocols", "gd_mp_api"), &WebSocketClient::connect_to_url, DEFVAL(PoolVector<String>()), DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("disconnect_from_host"), &WebSocketClient::disconnect_from_host);
-	ClassDB::bind_method(D_METHOD("is_connected_to_host"), &WebSocketClient::is_connected_to_host);
-	ClassDB::bind_method(D_METHOD("is_connecting_to_host"), &WebSocketClient::is_connecting_to_host);
 
 	ADD_SIGNAL(MethodInfo("data_received"));
 	ADD_SIGNAL(MethodInfo("connection_established", PropertyInfo(Variant::STRING, "protocol")));

@@ -60,6 +60,11 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	return OK;
 };
 
+void LWSClient::poll() {
+
+       _lws_poll();
+}
+
 int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len) {
 
 	Ref<LWSPeer> peer = static_cast<Ref<LWSPeer> >(_peer);
@@ -119,15 +124,16 @@ Ref<WebSocketPeer> LWSClient::get_peer(int p_peer_id) const {
 	return _peer;
 }
 
-bool LWSClient::is_connected_to_host() const {
+NetworkedMultiplayerPeer::ConnectionStatus LWSClient::get_connection_status() const {
 
-	return _peer->is_connected_to_host();
-};
+	if (context == NULL)
+		return CONNECTION_DISCONNECTED;
 
-bool LWSClient::is_connecting_to_host() const {
+	if (_peer->is_connected_to_host())
+		return CONNECTION_CONNECTED;
 
-	return context != NULL;
-};
+	return CONNECTION_CONNECTING;
+}
 
 void LWSClient::disconnect_from_host() {
 
