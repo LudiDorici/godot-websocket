@@ -78,19 +78,9 @@ Error WebSocketMultiplayerPeer::put_packet(const uint8_t *p_buffer, int p_buffer
 	ERR_FAIL_COND_V(!_is_multiplayer, ERR_UNCONFIGURED);
 	ERR_FAIL_COND_V(!get_peer(_target_peer).is_valid(), ERR_DOES_NOT_EXIST);
 
-	PoolVector<uint8_t> buffer;
-	uint32_t size = PROTO_SIZE + p_buffer_size;
-	buffer.resize(size);
-	{
-		uint8_t type = 0; // 0 is payload data
-		uint32_t from = get_unique_id();
-		PoolVector<uint8_t>::Write bw = buffer.write();
-		copymem(&bw[0], &type, 1);
-		copymem(&bw[1], &from, 4);
-		copymem(&bw[5], &_target_peer, 4);
-		copymem(&bw[PROTO_SIZE], p_buffer, p_buffer_size);
-	}
-	return get_peer(_target_peer)->put_packet(&(buffer.read()[0]), size);
+	PoolVector<uint8_t> buffer = _make_pkt(SYS_NONE, get_unique_id(), _target_peer, p_buffer, p_buffer_size);
+
+	return get_peer(_target_peer)->put_packet(&(buffer.read()[0]), buffer.size());
 
 }
 
@@ -135,18 +125,22 @@ void WebSocketMultiplayerPeer::_send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_ty
 	ERR_FAIL_COND(!p_peer.is_valid());
 	ERR_FAIL_COND(!p_peer->is_connected_to_host());
 
-	PoolVector<uint8_t> message;
-	uint32_t from = 1;
-	uint32_t to = 0;
-	message.resize(SYS_PACKET_SIZE);
-	{
-		PoolVector<uint8_t>::Write mw = message.write();
-		copymem(&mw[0], &p_type, 1);
-		copymem(&mw[1], &from, 4);
-		copymem(&mw[5], &to, 4);
-		copymem(&mw[PROTO_SIZE], &p_peer_id, 4);
-	}
-	p_peer->put_packet(&(message.read()[0]), SYS_PACKET_SIZE);
+	PoolVector<uint8_t> message = _make_pkt(p_type, 1, 0, (uint8_t *)&p_peer_id, 4);
+	p_peer->put_packet(&(message.read()[0]), message.size());
+}
+
+PoolVector<uint8_t> WebSocketMultiplayerPeer::_make_pkt(uint32_t p_type, uint32_t p_from, uint32_t p_to, const uint8_t *p_data, uint32_t p_data_size) {
+
+	PoolVector<uint8_t> out;
+	out.resize(PROTO_SIZE + p_data_size);
+
+	PoolVector<uint8_t>::Write w = out.write();
+	copymem(&w[0], &p_type, 1);
+	copymem(&w[1], &p_from, 4);
+	copymem(&w[5], &p_to, 4);
+	copymem(&w[PROTO_SIZE], p_data, p_data_size);
+
+	return out;
 }
 
 void WebSocketMultiplayerPeer::_send_add(uint32_t p_peer_id) {

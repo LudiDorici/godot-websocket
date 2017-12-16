@@ -10,6 +10,9 @@ class WebSocketMultiplayerPeer : public NetworkedMultiplayerPeer {
 
 	GDCLASS(WebSocketMultiplayerPeer, NetworkedMultiplayerPeer);
 
+private:
+	PoolVector<uint8_t> _make_pkt(uint32_t p_type, uint32_t p_from, uint32_t p_to, const uint8_t *p_data, uint32_t p_data_size);
+
 protected:
 	enum {
 		SYS_NONE = 0,
@@ -40,6 +43,9 @@ protected:
 
 	static void _bind_methods();
 
+	void _send_add(uint32_t p_peer_id);
+	void _send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_type, uint32_t p_peer_id);
+	void _send_del(uint32_t p_peer_id);
 public:
 	/* NetworkedMultiplayerPeer */
 	void set_transfer_mode(TransferMode p_mode);
@@ -60,14 +66,12 @@ public:
 	/* WebSocketPeer */
 	virtual Ref<WebSocketPeer> get_peer(int p_peer_id) const = 0;
 
-	void _send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_type, uint32_t p_peer_id);
-	void _send_add(uint32_t p_peer_id);
-	void _send_del(uint32_t p_peer_id);
 	void _process_multiplayer(Ref<WebSocketPeer> p_peer);
 	void _clear();
 
 	WebSocketMultiplayerPeer();
 	~WebSocketMultiplayerPeer();
+
 };
 
 #endif // WEBSOCKET_MULTIPLAYER_PEER_H
