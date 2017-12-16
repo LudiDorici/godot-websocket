@@ -3,7 +3,7 @@
 GDCINULL(WebSocketServer);
 
 WebSocketServer::WebSocketServer() {
-
+	_peer_id = 1;
 }
 
 WebSocketServer::~WebSocketServer() {
@@ -30,6 +30,11 @@ NetworkedMultiplayerPeer::ConnectionStatus WebSocketServer::get_connection_statu
 
 	return CONNECTION_DISCONNECTED;
 };
+
+bool WebSocketServer::is_server() const {
+
+	return true;
+}
 
 void WebSocketServer::_on_peer_packet(uint32_t p_peer_id) {
 

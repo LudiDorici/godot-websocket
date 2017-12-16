@@ -45,6 +45,11 @@ Error WebSocketClient::connect_to_url(String p_url, PoolVector<String> p_protoco
 	connect_to_host(host, path, port, ssl, p_protocols);
 }
 
+bool WebSocketClient::is_server() const {
+
+	return false;
+}
+
 NetworkedMultiplayerPeer::ConnectionStatus WebSocketClient::get_connection_status() const {
 
 	if (is_connected_to_host())

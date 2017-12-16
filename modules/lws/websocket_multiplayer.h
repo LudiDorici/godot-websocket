@@ -46,7 +46,7 @@ public:
 	void set_target_peer(int p_peer_id);
 	int get_packet_peer() const;
 	int get_unique_id() const;
-	bool is_server() const;
+	virtual bool is_server() const = 0;
 	void set_refuse_new_connections(bool p_enable);
 	bool is_refusing_new_connections() const;
 	virtual ConnectionStatus get_connection_status() const = 0;

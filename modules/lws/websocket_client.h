@@ -26,6 +26,7 @@ public:
 
 	virtual bool is_connected_to_host() const = 0;
 	virtual bool is_connecting_to_host() const = 0;
+	virtual bool is_server() const;
 	ConnectionStatus get_connection_status() const;
 
 	void _on_peer_packet();

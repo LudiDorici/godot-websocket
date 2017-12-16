@@ -116,11 +116,6 @@ int WebSocketMultiplayerPeer::get_packet_peer() const {
 	return _incoming_packets.front()->get().source;
 }
 
-bool WebSocketMultiplayerPeer::is_server() const {
-
-	return _peer_id == 1;
-}
-
 int WebSocketMultiplayerPeer::get_unique_id() const {
 
 	return _peer_id;
