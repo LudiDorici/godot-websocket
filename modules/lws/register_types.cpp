@@ -70,6 +70,7 @@ void register_lws_types() {
 	LWSServer::make_default();
 #endif
 
+	ClassDB::register_virtual_class<WebSocketMultiplayerPeer>();
 	ClassDB::register_custom_instance_class<WebSocketServer>();
 	ClassDB::register_custom_instance_class<WebSocketClient>();
 	ClassDB::register_custom_instance_class<WebSocketPeer>();

@@ -14,13 +14,10 @@ class LWSClient : public WebSocketClient {
 
 	LWS_HELPER(LWSClient);
 
-private:
-	Ref<LWSPeer> peer;
-
 public:
 
 	Error connect_to_host(String p_host, String p_path, uint16_t p_port, bool p_ssl, PoolVector<String> p_protocol = PoolVector<String>());
-	Ref<WebSocketPeer> get_peer() const;
+	Ref<WebSocketPeer> get_peer(int p_peer_id) const;
 	bool is_connected_to_host() const;
 	bool is_connecting_to_host() const;
 	void disconnect_from_host();

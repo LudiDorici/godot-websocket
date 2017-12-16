@@ -7,24 +7,24 @@
 extern "C" {
 EMSCRIPTEN_KEEPALIVE void _esws_on_connect(void *obj, char *proto) {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
-	client->emit_signal("connection_established", String(proto));
+	client->_on_connect(String(proto));
 }
 
 EMSCRIPTEN_KEEPALIVE void _esws_on_message(void *obj, uint8_t *p_data, int p_data_size, int p_is_string)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 
-	static_cast<EMWSPeer *>(*client->get_peer())->read_msg(p_data, p_data_size, p_is_string == 1);
-	client->emit_signal("data_received");
+	static_cast<EMWSPeer *>(*client->get_peer(1))->read_msg(p_data, p_data_size, p_is_string == 1);
+	client->_on_peer_packet(1); // always receive from server
 }
 
 EMSCRIPTEN_KEEPALIVE void _esws_on_error(void *obj)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
-	client->emit_signal("connection_error");
+	client->_on_error();
 }
 
 EMSCRIPTEN_KEEPALIVE void _esws_on_close(void *obj, int code, char* reason, int was_clean)  {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
-	client->emit_signal("connection_closed");
+	client->_on_disconnect();
 }
 }
 
@@ -119,8 +119,7 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 	}, this, str.utf8().get_data(), proto_string.utf8().get_data());
 	/* clang-format on */
 
-	peer = Ref<EMWSPeer>(memnew(EMWSPeer));
-	peer->set_sock(peer_sock);
+	static_cast<Ref<EMWSPeer> >(_peer)->set_sock(peer_sock);
 
 	return OK;
 };
@@ -129,14 +128,14 @@ void EMWSClient::poll() {
 
 }
 
-Ref<WebSocketPeer> EMWSClient::get_peer() const {
+Ref<WebSocketPeer> EMWSClient::get_peer(int p_peer_id) const {
 
-	return peer;
+	return _peer;
 }
 
 bool EMWSClient::is_connected_to_host() const {
 
-	return peer.is_valid() && peer->is_connected_to_host();
+	return _peer->is_connected_to_host();
 };
 
 bool EMWSClient::is_connecting_to_host() const {
@@ -146,7 +145,7 @@ bool EMWSClient::is_connecting_to_host() const {
 
 void EMWSClient::disconnect_from_host() {
 
-	peer->close();
+	_peer->close();
 };
 
 IP_Address EMWSClient::get_connected_host() const {
@@ -160,12 +159,13 @@ uint16_t EMWSClient::get_connected_port() const {
 };
 
 EMWSClient::EMWSClient() {
-	peer = Ref<EMWSPeer>();
+	_peer = Ref<EMWSPeer>(memnew(EMWSPeer));
 };
 
 EMWSClient::~EMWSClient() {
 
 	disconnect_from_host();
+	_peer = Ref<EMWSPeer>();
 };
 
 #endif // JAVASCRIPT_ENABLED

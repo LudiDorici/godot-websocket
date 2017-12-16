@@ -62,12 +62,12 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 
 int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len) {
 
+	Ref<LWSPeer> peer = static_cast<Ref<LWSPeer> >(_peer);
 	LWSPeer::PeerData *peer_data = (LWSPeer::PeerData *)user;
 
 	switch (reason) {
 
 		case LWS_CALLBACK_CLIENT_ESTABLISHED:
-			peer = Ref<LWSPeer>(memnew(LWSPeer));
 			peer->set_wsi(wsi);
 			peer_data->peer_id = 0;
 			peer_data->in_size = 0;
@@ -76,11 +76,11 @@ int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			peer_data->rbw.resize(16);
 			peer_data->rbr.resize(16);
 			peer_data->force_close = false;
-			emit_signal("connection_established", lws_get_protocol(wsi)->name);
+			_on_connect(lws_get_protocol(wsi)->name);
 			break;
 
 		case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-			emit_signal("connection_error");
+			_on_error();
 			destroy_context();
 			break;
 
@@ -89,25 +89,22 @@ int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			peer_data->out_count = 0;
 			peer_data->rbw.resize(0);
 			peer_data->rbr.resize(0);
-			if (peer.is_valid())
-				peer->close();
-			peer = Ref<LWSPeer>();
+			peer->close();
 			destroy_context();
-			emit_signal("connection_closed");
+			_on_disconnect();
 			return 0; // we can end here
 
 		case LWS_CALLBACK_CLIENT_RECEIVE:
-			if (peer.is_valid())
-				peer->read_wsi(in, len);
-			emit_signal("data_received");
+			peer->read_wsi(in, len);
+			if (peer->get_available_packet_count() > 0)
+				_on_peer_packet(1); // always receive from the server
 			break;
 
 		case LWS_CALLBACK_CLIENT_WRITEABLE:
 			if (peer_data->force_close)
 				return -1;
 
-			if (peer.is_valid())
-				peer->write_wsi();
+			peer->write_wsi();
 			break;
 
 		default:
@@ -117,14 +114,14 @@ int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 	return 0;
 }
 
-Ref<WebSocketPeer> LWSClient::get_peer() const {
+Ref<WebSocketPeer> LWSClient::get_peer(int p_peer_id) const {
 
-	return peer;
+	return _peer;
 }
 
 bool LWSClient::is_connected_to_host() const {
 
-	return peer.is_valid();
+	return _peer->is_connected_to_host();
 };
 
 bool LWSClient::is_connecting_to_host() const {
@@ -137,10 +134,7 @@ void LWSClient::disconnect_from_host() {
 	if (context == NULL)
 		return;
 
-	if (peer.is_valid())
-		peer->close();
-	peer = Ref<LWSPeer>();
-
+	_peer->close();
 	destroy_context();
 };
 
@@ -158,11 +152,13 @@ LWSClient::LWSClient() {
 	context = NULL;
 	free_context = false;
 	is_polling = false;
+	_peer = Ref<LWSPeer>(memnew(LWSPeer));
 };
 
 LWSClient::~LWSClient() {
 
 	disconnect_from_host();
+	_peer = Ref<LWSPeer>();
 };
 
 #endif // JAVASCRIPT_ENABLED
