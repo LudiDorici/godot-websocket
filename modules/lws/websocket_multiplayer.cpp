@@ -1,4 +1,5 @@
 #include "websocket_multiplayer.h"
+#include "core/os/os.h"
 
 WebSocketMultiplayerPeer::WebSocketMultiplayerPeer() {
 
@@ -18,6 +19,27 @@ WebSocketMultiplayerPeer::~WebSocketMultiplayerPeer() {
 	_clear();
 }
 
+int WebSocketMultiplayerPeer::_gen_unique_id() const {
+
+	uint32_t hash = 0;
+
+	while (hash == 0 || hash == 1) {
+
+		hash = hash_djb2_one_32(
+				(uint32_t)OS::get_singleton()->get_ticks_usec());
+		hash = hash_djb2_one_32(
+				(uint32_t)OS::get_singleton()->get_unix_time(), hash);
+		hash = hash_djb2_one_32(
+				(uint32_t)OS::get_singleton()->get_data_path().hash64(), hash);
+		hash = hash_djb2_one_32(
+				(uint32_t)((uint64_t)this), hash); //rely on aslr heap
+		hash = hash_djb2_one_32(
+				(uint32_t)((uint64_t)&hash), hash); //rely on aslr stack
+		hash = hash & 0x7FFFFFFF; // make it compatible with unsigned, since negatie id is used for exclusion
+	}
+
+	return hash;
+}
 void WebSocketMultiplayerPeer::_clear() {
 
 	_peer_map.clear();
@@ -122,7 +144,7 @@ bool WebSocketMultiplayerPeer::is_refusing_new_connections() const {
 	return _refusing;
 }
 
-void WebSocketMultiplayerPeer::_send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_type, uint32_t p_peer_id) {
+void WebSocketMultiplayerPeer::_send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_type, int32_t p_peer_id) {
 
 	ERR_FAIL_COND(!p_peer.is_valid());
 	ERR_FAIL_COND(!p_peer->is_connected_to_host());
@@ -131,7 +153,7 @@ void WebSocketMultiplayerPeer::_send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_ty
 	p_peer->put_packet(&(message.read()[0]), message.size());
 }
 
-PoolVector<uint8_t> WebSocketMultiplayerPeer::_make_pkt(uint32_t p_type, uint32_t p_from, uint32_t p_to, const uint8_t *p_data, uint32_t p_data_size) {
+PoolVector<uint8_t> WebSocketMultiplayerPeer::_make_pkt(uint32_t p_type, int32_t p_from, int32_t p_to, const uint8_t *p_data, uint32_t p_data_size) {
 
 	PoolVector<uint8_t> out;
 	out.resize(PROTO_SIZE + p_data_size);
@@ -145,18 +167,23 @@ PoolVector<uint8_t> WebSocketMultiplayerPeer::_make_pkt(uint32_t p_type, uint32_
 	return out;
 }
 
-void WebSocketMultiplayerPeer::_send_add(uint32_t p_peer_id) {
+void WebSocketMultiplayerPeer::_send_add(int32_t p_peer_id) {
 
 	for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
 		uint32_t id = E->key();
-		if (p_peer_id == id)
+		if (p_peer_id == id) {
 			_send_sys(get_peer(id), SYS_ID, p_peer_id);
-		else
+		}
+		else {
+			// Send new peer to others
 			_send_sys(get_peer(id), SYS_ADD, p_peer_id);
+			// Send others to new peer
+			_send_sys(get_peer(p_peer_id), SYS_ADD, id);
+		}
 	}
 }
 
-void WebSocketMultiplayerPeer::_send_del(uint32_t p_peer_id) {
+void WebSocketMultiplayerPeer::_send_del(int32_t p_peer_id) {
 	for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
 		uint32_t id = E->key();
 		if (p_peer_id != id)
@@ -164,7 +191,7 @@ void WebSocketMultiplayerPeer::_send_del(uint32_t p_peer_id) {
 	}
 }
 
-void WebSocketMultiplayerPeer::_store_pkt(uint32_t p_source, uint32_t p_dest, const uint8_t *p_data, uint32_t p_data_size) {
+void WebSocketMultiplayerPeer::_store_pkt(int32_t p_source, int32_t p_dest, const uint8_t *p_data, uint32_t p_data_size) {
 	Packet packet;
 	packet.data = (uint8_t *)memalloc(p_data_size);
 	packet.size = p_data_size;
@@ -174,7 +201,7 @@ void WebSocketMultiplayerPeer::_store_pkt(uint32_t p_source, uint32_t p_dest, co
 	_incoming_packets.push_back(packet);
 }
 
-Error WebSocketMultiplayerPeer::_server_relay(int p_from, int p_to, const uint8_t *p_buffer, uint32_t p_buffer_size) {
+Error WebSocketMultiplayerPeer::_server_relay(int32_t p_from, int32_t p_to, const uint8_t *p_buffer, uint32_t p_buffer_size) {
 	if (p_to == 1) {
 
 		return OK; // Will not send to self
@@ -219,8 +246,8 @@ void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer, u
 	data_size = size - PROTO_SIZE;
 
 	uint8_t type = 0;
-	uint32_t from = 0;
-	uint32_t to = 0;
+	int32_t from = 0;
+	int32_t to = 0;
 	copymem(&type, in_buffer, 1);
 	copymem(&from, &in_buffer[1], 4);
 	copymem(&to, &in_buffer[5], 4);

@@ -36,7 +36,7 @@ bool WebSocketServer::is_server() const {
 	return true;
 }
 
-void WebSocketServer::_on_peer_packet(uint32_t p_peer_id) {
+void WebSocketServer::_on_peer_packet(int32_t p_peer_id) {
 
 	if (_is_multiplayer) {
 		_process_multiplayer(get_peer(p_peer_id), p_peer_id);
@@ -45,7 +45,7 @@ void WebSocketServer::_on_peer_packet(uint32_t p_peer_id) {
 	}
 }
 
-void WebSocketServer::_on_connect(uint32_t p_peer_id, String p_protocol) {
+void WebSocketServer::_on_connect(int32_t p_peer_id, String p_protocol) {
 
 	if (_is_multiplayer) {
 		// Send add to clients
@@ -56,7 +56,7 @@ void WebSocketServer::_on_connect(uint32_t p_peer_id, String p_protocol) {
 	}
 }
 
-void WebSocketServer::_on_disconnect(uint32_t p_peer_id) {
+void WebSocketServer::_on_disconnect(int32_t p_peer_id) {
 
 	if (_is_multiplayer) {
 		// Send delete to clients

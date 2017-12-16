@@ -17,8 +17,6 @@ class LWSServer : public WebSocketServer {
 private:
 	Map<int, Ref<LWSPeer> > peer_map;
 
-	uint32_t _gen_unique_id() const;
-
 public:
 	Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>(), bool gd_mp_api=false);
 	void stop();

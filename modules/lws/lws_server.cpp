@@ -3,28 +3,6 @@
 #include "lws_server.h"
 #include "core/os/os.h"
 
-uint32_t LWSServer::_gen_unique_id() const {
-
-	uint32_t hash = 0;
-
-	while (hash == 0 || hash == 1) {
-
-		hash = hash_djb2_one_32(
-				(uint32_t)OS::get_singleton()->get_ticks_usec());
-		hash = hash_djb2_one_32(
-				(uint32_t)OS::get_singleton()->get_unix_time(), hash);
-		hash = hash_djb2_one_32(
-				(uint32_t)OS::get_singleton()->get_data_path().hash64(), hash);
-		hash = hash_djb2_one_32(
-				(uint32_t)((uint64_t)this), hash); //rely on aslr heap
-		hash = hash_djb2_one_32(
-				(uint32_t)((uint64_t)&hash), hash); //rely on aslr stack
-		hash = hash & 0x7FFFFFFF; // make it compatible with unsigned, since negatie id is used for exclusion
-	}
-
-	return hash;
-}
-
 Error LWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_api) {
 
 	_is_multiplayer = gd_mp_api;
@@ -75,7 +53,7 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			break;
 
 		case LWS_CALLBACK_ESTABLISHED: {
-			uint8_t id = _gen_unique_id();
+			int32_t id = _gen_unique_id();
 
 			Ref<LWSPeer> peer = Ref<LWSPeer>(memnew(LWSPeer));
 			peer->set_wsi(wsi);
@@ -94,7 +72,7 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 		}
 
 		case LWS_CALLBACK_CLOSED: {
-			int id = peer_data->peer_id;
+			int32_t id = peer_data->peer_id;
 			if (_peer_map.has(id)) {
 				_peer_map[id]->close();
 				_peer_map.erase(id);
@@ -108,7 +86,7 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 		}
 
 		case LWS_CALLBACK_RECEIVE: {
-			int id = peer_data->peer_id;
+			int32_t id = peer_data->peer_id;
 			if (_peer_map.has(id)) {
 				static_cast<Ref<LWSPeer> >(_peer_map[id])->read_wsi(in, len);
 				if (_peer_map[id]->get_available_packet_count() > 0)

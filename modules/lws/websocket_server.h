@@ -25,9 +25,9 @@ public:
 	virtual bool is_server() const;
 	ConnectionStatus get_connection_status() const;
 
-	void _on_peer_packet(uint32_t p_peer_id);
-	void _on_connect(uint32_t p_peer_id, String p_protocol);
-	void _on_disconnect(uint32_t p_peer_id);
+	void _on_peer_packet(int32_t p_peer_id);
+	void _on_connect(int32_t p_peer_id, String p_protocol);
+	void _on_disconnect(int32_t p_peer_id);
 
 	WebSocketServer();
 	~WebSocketServer();
