@@ -14,7 +14,7 @@ EMSCRIPTEN_KEEPALIVE void _esws_on_message(void *obj, uint8_t *p_data, int p_dat
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 
 	static_cast<EMWSPeer *>(*client->get_peer(1))->read_msg(p_data, p_data_size, p_is_string == 1);
-	client->_on_peer_packet(1); // always receive from server
+	client->_on_peer_packet();
 }
 
 EMSCRIPTEN_KEEPALIVE void _esws_on_error(void *obj)  {

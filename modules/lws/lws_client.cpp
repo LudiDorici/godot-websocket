@@ -97,7 +97,7 @@ int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 		case LWS_CALLBACK_CLIENT_RECEIVE:
 			peer->read_wsi(in, len);
 			if (peer->get_available_packet_count() > 0)
-				_on_peer_packet(1); // always receive from the server
+				_on_peer_packet();
 			break;
 
 		case LWS_CALLBACK_CLIENT_WRITEABLE:

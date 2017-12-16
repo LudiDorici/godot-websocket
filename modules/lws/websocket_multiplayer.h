@@ -11,6 +11,17 @@ class WebSocketMultiplayerPeer : public NetworkedMultiplayerPeer {
 	GDCLASS(WebSocketMultiplayerPeer, NetworkedMultiplayerPeer);
 
 protected:
+	enum {
+		SYS_NONE = 0,
+		SYS_ADD = 1,
+		SYS_DEL = 2,
+		SYS_ID = 3,
+
+		PROTO_SIZE = 9,
+		SYS_PACKET_SIZE = 11,
+		MAX_PACKET_SIZE = 65536 - 14 // 5 websocket, 9 multiplayer
+	};
+
 	struct Packet {
 		int source;
 		int destination;
@@ -19,6 +30,7 @@ protected:
 	};
 
 	List<Packet> _incoming_packets;
+	Map<int, Ref<WebSocketPeer> > _peer_map;
 	Packet _current_packet;
 
 	bool _is_multiplayer;
@@ -48,11 +60,9 @@ public:
 	/* WebSocketPeer */
 	virtual Ref<WebSocketPeer> get_peer(int p_peer_id) const = 0;
 
+	void _send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_type, uint32_t p_peer_id);
 	void _process_multiplayer(Ref<WebSocketPeer> p_peer);
-	void _on_peer_packet(int p_peer_id);
-	void _on_connect(String p_protocol);
-	void _on_disconnect();
-	void _on_error();
+	void _clear();
 
 	WebSocketMultiplayerPeer();
 	~WebSocketMultiplayerPeer();

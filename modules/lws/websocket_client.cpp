@@ -56,6 +56,42 @@ NetworkedMultiplayerPeer::ConnectionStatus WebSocketClient::get_connection_statu
 	return CONNECTION_DISCONNECTED;
 }
 
+void WebSocketClient::_on_peer_packet() {
+
+	if (_is_multiplayer) {
+		_process_multiplayer(get_peer(1));
+	} else {
+		emit_signal("data_received");
+	}
+}
+
+void WebSocketClient::_on_connect(String p_protocol) {
+
+	if (_is_multiplayer) {
+		// need to wait for ID confirmation...
+	} else {
+		emit_signal("connection_established", p_protocol);
+	}
+}
+
+void WebSocketClient::_on_disconnect() {
+
+	if (_is_multiplayer) {
+		emit_signal("connection_failed");
+	} else {
+		emit_signal("connection_closed");
+	}
+}
+
+void WebSocketClient::_on_error() {
+
+	if (_is_multiplayer) {
+		emit_signal("connection_failed");
+	} else {
+		emit_signal("connection_error");
+	}
+}
+
 void WebSocketClient::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("connect_to_url", "url", "protocols"), &WebSocketClient::connect_to_url, DEFVAL(PoolVector<String>()));
 	ClassDB::bind_method(D_METHOD("disconnect_from_host"), &WebSocketClient::disconnect_from_host);

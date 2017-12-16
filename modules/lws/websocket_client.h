@@ -28,6 +28,11 @@ public:
 	virtual bool is_connecting_to_host() const = 0;
 	ConnectionStatus get_connection_status() const;
 
+	void _on_peer_packet();
+	void _on_connect(String p_protocol);
+	void _on_disconnect();
+	void _on_error();
+
 	WebSocketClient();
 	~WebSocketClient();
 };
