@@ -138,7 +138,7 @@ bool WebSocketMultiplayerPeer::is_refusing_new_connections() const {
 
 void WebSocketMultiplayerPeer::_send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_type, uint32_t p_peer_id) {
 
-	ERR_FAIL_COND(p_peer.is_valid());
+	ERR_FAIL_COND(!p_peer.is_valid());
 	ERR_FAIL_COND(!p_peer->is_connected_to_host());
 
 	PoolVector<uint8_t> message;
@@ -148,9 +148,9 @@ void WebSocketMultiplayerPeer::_send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_ty
 	{
 		PoolVector<uint8_t>::Write mw = message.write();
 		copymem(&mw[0], &p_type, 1);
-		copymem(&mw[1], &from, 1);
-		copymem(&mw[5], &to, 1);
-		copymem(&mw[PROTO_SIZE], &p_peer_id, 1);
+		copymem(&mw[1], &from, 4);
+		copymem(&mw[5], &to, 4);
+		copymem(&mw[PROTO_SIZE], &p_peer_id, 4);
 	}
 	p_peer->put_packet(&(message.read()[0]), SYS_PACKET_SIZE);
 }
@@ -176,7 +176,7 @@ void WebSocketMultiplayerPeer::_send_del(uint32_t p_peer_id) {
 
 void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer) {
 
-	ERR_FAIL_COND(p_peer.is_valid());
+	ERR_FAIL_COND(!p_peer.is_valid());
 
 	const uint8_t *in_buffer;
 	int size = 0;
