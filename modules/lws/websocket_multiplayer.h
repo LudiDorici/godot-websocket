@@ -13,6 +13,7 @@ class WebSocketMultiplayerPeer : public NetworkedMultiplayerPeer {
 private:
 	PoolVector<uint8_t> _make_pkt(uint32_t p_type, uint32_t p_from, uint32_t p_to, const uint8_t *p_data, uint32_t p_data_size);
 	void _store_pkt(uint32_t p_source, uint32_t p_dest, const uint8_t *p_data, uint32_t p_data_size);
+	Error _server_relay(int p_from, int p_to, const uint8_t *p_buffer, uint32_t p_buffer_size);
 
 protected:
 	enum {

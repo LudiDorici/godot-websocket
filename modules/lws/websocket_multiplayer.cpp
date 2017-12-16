@@ -80,8 +80,11 @@ Error WebSocketMultiplayerPeer::put_packet(const uint8_t *p_buffer, int p_buffer
 
 	PoolVector<uint8_t> buffer = _make_pkt(SYS_NONE, get_unique_id(), _target_peer, p_buffer, p_buffer_size);
 
-	return get_peer(_target_peer)->put_packet(&(buffer.read()[0]), buffer.size());
-
+	if (is_server()) {
+		return _server_relay(1, _target_peer, &(buffer.read()[0]), buffer.size());
+	} else {
+		return get_peer(_target_peer)->put_packet(&(buffer.read()[0]), buffer.size());
+	}
 }
 
 //
@@ -172,6 +175,35 @@ void WebSocketMultiplayerPeer::_store_pkt(uint32_t p_source, uint32_t p_dest, co
 	_incoming_packets.push_back(packet);
 }
 
+Error WebSocketMultiplayerPeer::_server_relay(int p_from, int p_to, const uint8_t *p_buffer, uint32_t p_buffer_size) {
+	if (p_to == 1) {
+
+		return OK; // Will not send to self
+
+	} else if (p_to == 0) {
+
+		for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
+			if (E->key() != p_from)
+				E->get()->put_packet(p_buffer, p_buffer_size);
+		}
+		return OK; // Sent to all but sender
+
+	} else if(p_to < 0) {
+
+		for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
+			if (E->key() != p_from && E->key() != -p_to)
+				E->get()->put_packet(p_buffer, p_buffer_size);
+		}
+		return OK; // Sent to all but sender and excluded
+
+	} else {
+
+		ERR_FAIL_COND_V(p_to == p_from, FAILED);
+
+		return get_peer(p_to)->put_packet(p_buffer, p_buffer_size); // Sending to specific peer
+	}
+}
+
 void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer, uint32_t p_peer_id) {
 
 	ERR_FAIL_COND(!p_peer.is_valid());
@@ -199,28 +231,21 @@ void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer, u
 		ERR_FAIL_COND(type != SYS_NONE); // Only server sends sys messages
 		ERR_FAIL_COND(from != p_peer_id); // Someone is cheating
 
+		_server_relay(from, to, in_buffer, size); // Relay if needed
+
 		if (to == 1) { // This is for the server
 
 			_store_pkt(from, to, in_buffer, data_size);
 
 		} else if (to == 0) {
 
-			// Send all but sender
-			for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
-				if(E->key() != p_peer_id)
-					E->get()->put_packet(in_buffer, size);
-			}
-			if (from != _peer_id)
-				_store_pkt(from, to, in_buffer, data_size);
+			// Broadcast, for us too
+			_store_pkt(from, to, in_buffer, data_size);
 
 		} else if (to < 0) {
 
-			// Send all but one and sender
-			for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
-				if(E->key() != from && E->key() != -p_peer_id)
-					E->get()->put_packet(in_buffer, size);
-			}
-			if (from != _peer_id && _peer_id != -p_peer_id)
+			// All but one, for us if not excluded
+			if (_peer_id != -p_peer_id)
 				_store_pkt(from, to, in_buffer, data_size);
 
 		} else {
