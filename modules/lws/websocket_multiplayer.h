@@ -61,6 +61,8 @@ public:
 	virtual Ref<WebSocketPeer> get_peer(int p_peer_id) const = 0;
 
 	void _send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_type, uint32_t p_peer_id);
+	void _send_add(uint32_t p_peer_id);
+	void _send_del(uint32_t p_peer_id);
 	void _process_multiplayer(Ref<WebSocketPeer> p_peer);
 	void _clear();
 

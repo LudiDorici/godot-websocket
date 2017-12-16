@@ -155,6 +155,25 @@ void WebSocketMultiplayerPeer::_send_sys(Ref<WebSocketPeer> p_peer, uint8_t p_ty
 	p_peer->put_packet(&(message.read()[0]), SYS_PACKET_SIZE);
 }
 
+void WebSocketMultiplayerPeer::_send_add(uint32_t p_peer_id) {
+
+	for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
+		uint32_t id = E->key();
+		if (p_peer_id == id)
+			_send_sys(get_peer(id), SYS_ID, p_peer_id);
+		else
+			_send_sys(get_peer(id), SYS_ADD, p_peer_id);
+	}
+}
+
+void WebSocketMultiplayerPeer::_send_del(uint32_t p_peer_id) {
+	for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
+		uint32_t id = E->key();
+		if (p_peer_id != id)
+			_send_sys(get_peer(id), SYS_DEL, p_peer_id);
+	}
+}
+
 void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer) {
 
 	ERR_FAIL_COND(p_peer.is_valid());

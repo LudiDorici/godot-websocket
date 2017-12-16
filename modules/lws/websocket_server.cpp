@@ -43,8 +43,9 @@ void WebSocketServer::_on_peer_packet(uint32_t p_peer_id) {
 void WebSocketServer::_on_connect(uint32_t p_peer_id, String p_protocol) {
 
 	if (_is_multiplayer) {
+		// Send add to clients
+		_send_add(p_peer_id);
 		emit_signal("peer_connected", p_peer_id);
-		// need to send ID confirmation...
 	} else {
 		emit_signal("client_connected", p_peer_id, p_protocol);
 	}
@@ -53,6 +54,8 @@ void WebSocketServer::_on_connect(uint32_t p_peer_id, String p_protocol) {
 void WebSocketServer::_on_disconnect(uint32_t p_peer_id) {
 
 	if (_is_multiplayer) {
+		// Send delete to clients
+		_send_del(p_peer_id);
 		emit_signal("peer_disconnected", p_peer_id);
 	} else {
 		emit_signal("client_disconnected", p_peer_id);
