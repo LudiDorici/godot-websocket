@@ -77,7 +77,7 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 
 			Ref<LWSPeer> peer = Ref<LWSPeer>(memnew(LWSPeer));
 			peer->set_wsi(wsi);
-			peer_map[id] = peer;
+			_peer_map[id] = peer;
 
 			peer_data->peer_id = id;
 			peer_data->in_size = 0;
@@ -87,29 +87,31 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			peer_data->rbr.resize(16);
 			peer_data->force_close = false;
 
-			emit_signal("client_connected", peer_data->peer_id, lws_get_protocol(wsi)->name);
+			_on_connect(id, lws_get_protocol(wsi)->name);
 			break;
 		}
 
 		case LWS_CALLBACK_CLOSED: {
 			int id = peer_data->peer_id;
-			if (peer_map.has(id)) {
-				peer_map[id]->close();
-				peer_map.erase(id);
+			if (_peer_map.has(id)) {
+				_peer_map[id]->close();
+				_peer_map.erase(id);
 			}
 			peer_data->in_count = 0;
 			peer_data->out_count = 0;
 			peer_data->rbr.resize(0);
 			peer_data->rbw.resize(0);
-			emit_signal("client_disconnected", id);
+			_on_disconnect(id);
 			return 0; // we can end here
 		}
 
 		case LWS_CALLBACK_RECEIVE: {
 			int id = peer_data->peer_id;
-			if (peer_map.has(id))
-				peer_map[id]->read_wsi(in, len);
-			emit_signal("data_received", id);
+			if (_peer_map.has(id)) {
+				static_cast<Ref<LWSPeer> >(_peer_map[id])->read_wsi(in, len);
+				if (_peer_map[id]->get_available_packet_count() > 0)
+					_on_peer_packet(id);
+			}
 			break;
 		}
 
@@ -118,8 +120,8 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 				return -1;
 
 			int id = peer_data->peer_id;
-			if (peer_map.has(id))
-				peer_map[id]->write_wsi();
+			if (_peer_map.has(id))
+				static_cast<Ref<LWSPeer> >(_peer_map[id])->write_wsi();
 			break;
 		}
 
@@ -134,18 +136,18 @@ void LWSServer::stop() {
 	if (context == NULL)
 		return;
 
-	peer_map.clear();
+	_peer_map.clear();
 	destroy_context();
 	context = NULL;
 }
 
 bool LWSServer::has_peer(int p_id) const {
-	return peer_map.has(p_id);
+	return _peer_map.has(p_id);
 }
 
 Ref<WebSocketPeer> LWSServer::get_peer(int p_id) const {
 	ERR_FAIL_COND_V(!has_peer(p_id), NULL);
-	return peer_map[p_id];
+	return _peer_map[p_id];
 }
 
 LWSServer::LWSServer() {
