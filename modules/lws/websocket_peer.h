@@ -18,16 +18,7 @@ public:
 	};
 
 protected:
-	static void _bind_methods() {
-		ClassDB::bind_method(D_METHOD("get_write_mode"), &WebSocketPeer::get_write_mode);
-		ClassDB::bind_method(D_METHOD("set_write_mode", "mode"), &WebSocketPeer::set_write_mode);
-		ClassDB::bind_method(D_METHOD("is_connected_to_host"), &WebSocketPeer::is_connected_to_host);
-		ClassDB::bind_method(D_METHOD("was_string_packet"), &WebSocketPeer::was_string_packet);
-		ClassDB::bind_method(D_METHOD("close"), &WebSocketPeer::close);
-
-		BIND_ENUM_CONSTANT(WRITE_MODE_TEXT);
-		BIND_ENUM_CONSTANT(WRITE_MODE_BINARY);
-	}
+	static void _bind_methods();
 
 public:
 
@@ -46,8 +37,8 @@ public:
 	virtual uint16_t get_connected_port() const = 0;
 	virtual bool was_string_packet() const = 0;
 
-	WebSocketPeer() {};
-	~WebSocketPeer() {};
+	WebSocketPeer();
+	~WebSocketPeer();
 };
 
 VARIANT_ENUM_CAST(WebSocketPeer::WriteMode);
