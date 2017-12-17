@@ -3,10 +3,9 @@ extends Node
 onready var _log_dest = get_parent().get_node("Panel/VBoxContainer/RichTextLabel")
 
 var _client = WebSocketClient.new()
-var _peer = null
-var wsc = WebSocketPeer.new()
-var _connected = false
 var _write_mode = WebSocketPeer.WRITE_MODE_BINARY
+var _use_multiplayer = true
+var last_connected_client = 0
 
 func _init():
 	_client.connect("connection_established", self, "_client_connected")
@@ -14,58 +13,57 @@ func _init():
 	_client.connect("connection_closed", self, "_client_disconnected")
 	_client.connect("data_received", self, "_client_received")
 
-func _ready():
-	var mode = get_node("../Panel/VBoxContainer/Send/Mode")
-	mode.clear()
-	mode.add_item("BINARY")
-	mode.set_item_metadata(0, WebSocketPeer.WRITE_MODE_BINARY)
-	mode.add_item("TEXT")
-	mode.set_item_metadata(1, WebSocketPeer.WRITE_MODE_TEXT)
+	_client.connect("peer_packet", self, "_client_received")
+	_client.connect("peer_connected", self, "_peer_connected")
+	_client.connect("connection_succeeded", self, "_client_connected", ["multiplayer_protocol"])
+	_client.connect("connection_failed", self, "_client_disconnected")
+
+func _peer_connected(id):
+	Utils._log(_log_dest, "%s: Client just connected" % id)
+	last_connected_client = id
 
 func _exit_tree():
 	_client.disconnect_from_host()
 
 func _process(delta):
-	if _client.get_connection_status() != WebSocketClient.CONNECTION_DISCONNECTED:
-		_client.poll()
+	if _client.get_connection_status() == WebSocketClient.CONNECTION_DISCONNECTED:
+		return
+
+	_client.poll()
 
 func _client_connected(protocol):
 	Utils._log(_log_dest, "Client just connected with protocol: %s" % protocol)
-	_peer = Utils.Peer.new(_client.get_peer(1))
-	_peer.set_write_mode(_write_mode)
+	_client.get_peer(1).set_write_mode(_write_mode)
 
 func _client_disconnected():
 	Utils._log(_log_dest, "Client just disconnected")
-	if _peer != null:
-		_peer.free()
-		_peer = null
 
-func _client_received():
-	Utils._log(_log_dest, "Client just received %s packets" % _peer.get_available_packet_count())
-	var data = _peer.recv()
-	Utils._log(_log_dest, "Received data: %s" % data)
-
-func _on_ConnectBtn_toggled( pressed ):
-	if pressed:
-		var txt = get_node("../Panel/VBoxContainer/Connect/LineEdit").get_text()
-		if txt != "":
-			_client.connect_to_url(txt, PoolStringArray(["my-protocol-2", "my-protocol", "binary"]))
-			Utils._log(_log_dest, "Connecting to host: %s" % [txt])
+func _client_received(p_id = 1):
+	if _use_multiplayer:
+		var peer_id = _client.get_packet_peer()
+		var packet = _client.get_packet()
+		Utils._log(_log_dest, "MPAPI: From %s Data: %s" % [str(peer_id), Utils.decode_data(packet, false)])
 	else:
-		if _peer != null:
-			_peer.close()
-		_client.disconnect_from_host()
+		var packet = _client.get_peer(1).get_packet()
+		var is_string = _client.get_peer(1).was_string_packet()
+		Utils._log(_log_dest, "Received data. BINARY: %s: %s" % [not is_string, Utils.decode_data(packet, is_string)])
 
-func _on_SendBtn_pressed():
-	if _peer == null:
-		return
-	var txt = get_node("../Panel/VBoxContainer/Send/LineEdit").get_text()
-	if txt != "":
-		_peer.send(txt)
-		get_node("../Panel/VBoxContainer/Send/LineEdit").set_text("")
-		Utils._log(_log_dest, "Sending data: %s" % txt)
+func connect_to_url(host, protocols, multiplayer):
+	_use_multiplayer = multiplayer
+	if _use_multiplayer:
+		_write_mode = WebSocketPeer.WRITE_MODE_BINARY
+	return _client.connect_to_url(host, protocols, multiplayer)
 
-func _on_Mode_item_selected( ID ):
-	_write_mode = get_node("../Panel/VBoxContainer/Send/Mode").get_selected_metadata()
-	if _peer != null:
-		_peer.set_write_mode(_write_mode)
+func disconnect_from_host():
+	_client.disconnect_from_host()
+
+func send_data(data, dest):
+	_client.get_peer(1).set_write_mode(_write_mode)
+	if _use_multiplayer:
+		_client.set_target_peer(dest)
+		_client.put_packet(Utils.encode_data(data, _write_mode))
+	else:
+		_client.get_peer(1).put_packet(Utils.encode_data(data, _write_mode))
+
+func set_write_mode(mode):
+	_write_mode = mode

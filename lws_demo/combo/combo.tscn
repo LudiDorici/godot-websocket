@@ -62,7 +62,7 @@ _sections_unfolded = [ "Size Flags" ]
 anchor_right = 0.0
 anchor_bottom = 0.0
 margin_right = 502.0
-margin_bottom = 298.0
+margin_bottom = 197.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 _sections_unfolded = [ "Size Flags", "Visibility" ]
@@ -71,7 +71,18 @@ _sections_unfolded = [ "Size Flags", "Visibility" ]
 
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_top = 302.0
+margin_top = 201.0
+margin_right = 502.0
+margin_bottom = 398.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+_sections_unfolded = [ "Size Flags", "Visibility" ]
+
+[node name="Client3" parent="Box/VBoxContainer" instance=ExtResource( 2 )]
+
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_top = 402.0
 margin_right = 502.0
 margin_bottom = 600.0
 size_flags_horizontal = 3
