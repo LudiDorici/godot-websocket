@@ -57,6 +57,8 @@ void WebSocketMultiplayerPeer::_clear() {
 void WebSocketMultiplayerPeer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_peer", "peer_id"), &WebSocketMultiplayerPeer::get_peer);
+
+	ADD_SIGNAL(MethodInfo("peer_packet", PropertyInfo(Variant::INT, "peer_source")));
 }
 
 //
@@ -203,6 +205,7 @@ void WebSocketMultiplayerPeer::_store_pkt(int32_t p_source, int32_t p_dest, cons
 	packet.destination = p_dest;
 	copymem(packet.data, &p_data[PROTO_SIZE], p_data_size);
 	_incoming_packets.push_back(packet);
+	emit_signal("peer_packet", p_source);
 }
 
 Error WebSocketMultiplayerPeer::_server_relay(int32_t p_from, int32_t p_to, const uint8_t *p_buffer, uint32_t p_buffer_size) {
