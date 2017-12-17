@@ -4,8 +4,8 @@
 #ifdef JAVASCRIPT_ENABLED
 
 #include "core/error_list.h"
-#include "websocket_client.h"
 #include "emws_peer.h"
+#include "websocket_client.h"
 
 class EMWSClient : public WebSocketClient {
 
@@ -23,7 +23,6 @@ public:
 	virtual void poll();
 	EMWSClient();
 	~EMWSClient();
-
 };
 
 #endif // JAVASCRIPT_ENABLED

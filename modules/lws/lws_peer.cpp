@@ -23,7 +23,7 @@ Error LWSPeer::read_wsi(void *in, size_t len) {
 	uint32_t size = peer_data->in_size;
 	uint8_t is_string = lws_frame_is_binary(wsi) ? 0 : 1;
 
-	if (peer_data->rbr.space_left() < len+5) {
+	if (peer_data->rbr.space_left() < len + 5) {
 		ERR_EXPLAIN("Buffer full! Dropping data");
 		ERR_FAIL_V(FAILED);
 	}
@@ -105,7 +105,7 @@ Error LWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) {
 	peer_data->in_count--;
 	left = peer_data->rbr.data_left();
 
-	if(left < to_read+1) {
+	if (left < to_read + 1) {
 		peer_data->rbr.advance_read(left);
 		return FAILED;
 	}

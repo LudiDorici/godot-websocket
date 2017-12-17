@@ -3,11 +3,9 @@
 GDCINULL(WebSocketPeer);
 
 WebSocketPeer::WebSocketPeer() {
-
 }
 
 WebSocketPeer::~WebSocketPeer() {
-
 }
 
 void WebSocketPeer::_bind_methods() {

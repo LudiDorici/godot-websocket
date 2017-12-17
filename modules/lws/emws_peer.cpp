@@ -20,7 +20,7 @@ EMWSPeer::WriteMode EMWSPeer::get_write_mode() const {
 
 void EMWSPeer::read_msg(uint8_t *p_data, uint32_t p_size, bool p_is_string) {
 
-	if (in_buffer.space_left() < p_size+5) {
+	if (in_buffer.space_left() < p_size + 5) {
 		ERR_EXPLAIN("Buffer full! Dropping data");
 		ERR_FAIL();
 	}
@@ -35,6 +35,8 @@ void EMWSPeer::read_msg(uint8_t *p_data, uint32_t p_size, bool p_is_string) {
 Error EMWSPeer::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
 
 	int is_bin = write_mode == WebSocketPeer::WRITE_MODE_BINARY ? 1 : 0;
+
+	/* clang-format off */
 	EM_ASM({
 		var sock = Module.IDHandler.get($0);
 		var bytes_array = new Uint8Array($2);
@@ -51,6 +53,7 @@ Error EMWSPeer::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
 			sock.send(string);
 		}
 	}, peer_sock, p_buffer, p_buffer_size, is_bin);
+	/* clang-format on */
 
 	return OK;
 };
@@ -69,7 +72,7 @@ Error EMWSPeer::get_packet(const uint8_t **r_buffer, int &r_buffer_size) {
 	--queue_count;
 	left = in_buffer.data_left();
 
-	if(left < to_read+1) {
+	if (left < to_read + 1) {
 		in_buffer.advance_read(left);
 		return FAILED;
 	}
@@ -101,11 +104,13 @@ bool EMWSPeer::is_connected_to_host() const {
 void EMWSPeer::close() {
 
 	if (peer_sock != -1) {
+		/* clang-format off */
 		EM_ASM({
 			var sock = Module.IDHandler.get($0);
 			sock.close();
 			Module.IDHandler.remove($0);
 		}, peer_sock);
+		/* clang-format on */
 	}
 	peer_sock = -1;
 	queue_count = 0;

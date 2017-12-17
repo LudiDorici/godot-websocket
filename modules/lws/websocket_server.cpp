@@ -7,7 +7,6 @@ WebSocketServer::WebSocketServer() {
 }
 
 WebSocketServer::~WebSocketServer() {
-
 }
 
 void WebSocketServer::_bind_methods() {
@@ -21,7 +20,6 @@ void WebSocketServer::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("client_disconnected", PropertyInfo(Variant::INT, "id")));
 	ADD_SIGNAL(MethodInfo("client_connected", PropertyInfo(Variant::INT, "id"), PropertyInfo(Variant::STRING, "protocol")));
 	ADD_SIGNAL(MethodInfo("data_received", PropertyInfo(Variant::INT, "id")));
-
 }
 
 NetworkedMultiplayerPeer::ConnectionStatus WebSocketServer::get_connection_status() const {

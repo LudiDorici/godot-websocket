@@ -221,7 +221,7 @@ Error WebSocketMultiplayerPeer::_server_relay(int32_t p_from, int32_t p_to, cons
 		}
 		return OK; // Sent to all but sender
 
-	} else if(p_to < 0) {
+	} else if (p_to < 0) {
 
 		for (Map<int, Ref<WebSocketPeer> >::Element *E = _peer_map.front(); E; E = E->next()) {
 			if (E->key() != p_from && E->key() != -p_to)
@@ -286,16 +286,14 @@ void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer, u
 			// Send to specific peer
 			ERR_FAIL_COND(!_peer_map.has(to));
 			get_peer(to)->put_packet(in_buffer, size);
-
 		}
 
 	} else {
 
-		if(type == SYS_NONE) { // Payload message
+		if (type == SYS_NONE) { // Payload message
 
 			_store_pkt(from, to, in_buffer, data_size);
 			return;
-
 		}
 
 		// System message
@@ -303,7 +301,7 @@ void WebSocketMultiplayerPeer::_process_multiplayer(Ref<WebSocketPeer> p_peer, u
 		int id = 0;
 		copymem(&id, &in_buffer[PROTO_SIZE], 4);
 
-		switch(type) {
+		switch (type) {
 
 			case SYS_ADD: // Add peer
 				_peer_map[id] = Ref<WebSocketPeer>();

@@ -62,7 +62,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 
 void LWSClient::poll() {
 
-       _lws_poll();
+	_lws_poll();
 }
 
 int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len) {

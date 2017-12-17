@@ -13,7 +13,6 @@ bool EMWSServer::is_listening() const {
 }
 
 void EMWSServer::stop() {
-
 }
 
 bool EMWSServer::has_peer(int p_id) const {
@@ -31,11 +30,9 @@ PoolVector<String> EMWSServer::get_protocols() const {
 }
 
 EMWSServer::EMWSServer() {
-
 }
 
 EMWSServer::~EMWSServer() {
-
 }
 
 #endif // JAVASCRIPT_ENABLED

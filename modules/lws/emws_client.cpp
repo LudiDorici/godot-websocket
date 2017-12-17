@@ -1,8 +1,8 @@
 #ifdef JAVASCRIPT_ENABLED
 
-#include "emscripten.h"
 #include "emws_client.h"
 #include "core/io/ip.h"
+#include "emscripten.h"
 
 extern "C" {
 EMSCRIPTEN_KEEPALIVE void _esws_on_connect(void *obj, char *proto) {
@@ -11,20 +11,20 @@ EMSCRIPTEN_KEEPALIVE void _esws_on_connect(void *obj, char *proto) {
 	client->_on_connect(String(proto));
 }
 
-EMSCRIPTEN_KEEPALIVE void _esws_on_message(void *obj, uint8_t *p_data, int p_data_size, int p_is_string)  {
+EMSCRIPTEN_KEEPALIVE void _esws_on_message(void *obj, uint8_t *p_data, int p_data_size, int p_is_string) {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 
 	static_cast<EMWSPeer *>(*client->get_peer(1))->read_msg(p_data, p_data_size, p_is_string == 1);
 	client->_on_peer_packet();
 }
 
-EMSCRIPTEN_KEEPALIVE void _esws_on_error(void *obj)  {
+EMSCRIPTEN_KEEPALIVE void _esws_on_error(void *obj) {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 	client->_is_connecting = false;
 	client->_on_error();
 }
 
-EMSCRIPTEN_KEEPALIVE void _esws_on_close(void *obj, int code, char* reason, int was_clean)  {
+EMSCRIPTEN_KEEPALIVE void _esws_on_close(void *obj, int code, char *reason, int was_clean) {
 	EMWSClient *client = static_cast<EMWSClient *>(obj);
 	client->_is_connecting = false;
 	client->_on_disconnect();
@@ -37,7 +37,7 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 	String proto_string = "";
 	int i = 0;
 
-	if(p_ssl)
+	if (p_ssl)
 		str = "wss://";
 	str += p_host + ":" + itos(p_port) + p_path;
 	for (int i = 0; i < p_protocols.size(); i++) {
@@ -47,7 +47,7 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 	if (proto_string == "")
 		proto_string = "binary,";
 
-	proto_string = proto_string.substr(0, proto_string.length()-1);
+	proto_string = proto_string.substr(0, proto_string.length() - 1);
 
 	_is_connecting = true;
 	/* clang-format off */
@@ -129,7 +129,6 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 };
 
 void EMWSClient::poll() {
-
 }
 
 Ref<WebSocketPeer> EMWSClient::get_peer(int p_peer_id) const {

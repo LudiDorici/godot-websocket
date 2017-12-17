@@ -30,13 +30,13 @@
 #include "register_types.h"
 #include "error_macros.h"
 #ifdef JAVASCRIPT_ENABLED
-#include "emws_peer.h"
-#include "emws_client.h"
-#include "emws_server.h"
 #include "emscripten.h"
+#include "emws_client.h"
+#include "emws_peer.h"
+#include "emws_server.h"
 #else
-#include "lws_peer.h"
 #include "lws_client.h"
+#include "lws_peer.h"
 #include "lws_server.h"
 #endif
 

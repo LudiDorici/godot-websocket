@@ -3,11 +3,9 @@
 GDCINULL(WebSocketClient);
 
 WebSocketClient::WebSocketClient() {
-
 }
 
 WebSocketClient::~WebSocketClient() {
-
 }
 
 Error WebSocketClient::connect_to_url(String p_url, PoolVector<String> p_protocols, bool gd_mp_api) {
@@ -94,5 +92,4 @@ void WebSocketClient::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("connection_established", PropertyInfo(Variant::STRING, "protocol")));
 	ADD_SIGNAL(MethodInfo("connection_closed"));
 	ADD_SIGNAL(MethodInfo("connection_error"));
-
 }

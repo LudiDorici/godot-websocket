@@ -6,16 +6,15 @@
 #include "core/error_list.h"
 #include "core/io/packet_peer.h"
 #include "core/ring_buffer.h"
-#include "websocket_peer.h"
-#include "lws_config.h"
 #include "libwebsockets.h"
+#include "lws_config.h"
+#include "websocket_peer.h"
 
 class LWSPeer : public WebSocketPeer {
 
 	GDCIIMPL(LWSPeer, WebSocketPeer);
 
 private:
-
 	enum {
 		PACKET_BUFFER_SIZE = 65536 - 5 // 4 bytes for the size, 1 for the type
 	};

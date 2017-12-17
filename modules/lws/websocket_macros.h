@@ -1,6 +1,7 @@
 #ifndef WEBSOCKETMACTOS_H
 #define WEBSOCKETMACTOS_H
 
+/* clang-format off */
 #define GDCICLASS(CNAME) \
 public:\
 	static CNAME *(*_create)();\
@@ -28,8 +29,6 @@ public:\
 	static CNAME *_create() { return memnew(IMPNAME); }\
 	static void make_default() { CNAME::_create = IMPNAME::_create; }\
 protected:\
-
-
+/* clang-format on */
 
 #endif // WEBSOCKETMACTOS_H
-

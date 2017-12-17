@@ -4,8 +4,8 @@
 #ifdef JAVASCRIPT_ENABLED
 
 #include "core/reference.h"
-#include "websocket_server.h"
 #include "emws_peer.h"
+#include "websocket_server.h"
 
 class EMWSServer : public WebSocketServer {
 

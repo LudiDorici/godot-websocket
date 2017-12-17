@@ -7,6 +7,7 @@
 #include "core/ring_buffer.h"
 #include "lws_peer.h"
 
+/* clang-format off */
 #define LWS_HELPER(CNAME) \
 protected:															\
 	struct lws_context *context;												\
@@ -108,7 +109,8 @@ public:																\
 		return out;													\
 	}															\
 																\
-private:															\
+protected:
 
+/* clang-format on */
 
 #endif // LWS_HELPER_H

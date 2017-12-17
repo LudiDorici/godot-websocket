@@ -4,9 +4,9 @@
 #ifndef JAVASCRIPT_ENABLED
 
 #include "core/error_list.h"
-#include "websocket_client.h"
 #include "lws_helper.h"
 #include "lws_peer.h"
+#include "websocket_client.h"
 
 class LWSClient : public WebSocketClient {
 
@@ -15,7 +15,6 @@ class LWSClient : public WebSocketClient {
 	LWS_HELPER(LWSClient);
 
 public:
-
 	Error connect_to_host(String p_host, String p_path, uint16_t p_port, bool p_ssl, PoolVector<String> p_protocol = PoolVector<String>());
 	Ref<WebSocketPeer> get_peer(int p_peer_id) const;
 	void disconnect_from_host();
@@ -26,7 +25,6 @@ public:
 
 	LWSClient();
 	~LWSClient();
-
 };
 
 #endif // JAVASCRIPT_ENABLED

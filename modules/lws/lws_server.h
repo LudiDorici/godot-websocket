@@ -4,9 +4,9 @@
 #ifndef JAVASCRIPT_ENABLED
 
 #include "core/reference.h"
-#include "websocket_server.h"
 #include "lws_helper.h"
 #include "lws_peer.h"
+#include "websocket_server.h"
 
 class LWSServer : public WebSocketServer {
 
@@ -18,7 +18,7 @@ private:
 	Map<int, Ref<LWSPeer> > peer_map;
 
 public:
-	Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>(), bool gd_mp_api=false);
+	Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>(), bool gd_mp_api = false);
 	void stop();
 	bool is_listening() const;
 	bool has_peer(int p_id) const;

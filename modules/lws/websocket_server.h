@@ -2,8 +2,8 @@
 #define WEBSOCKET_H
 
 #include "core/reference.h"
-#include "websocket_peer.h"
 #include "websocket_multiplayer.h"
+#include "websocket_peer.h"
 
 class WebSocketServer : public WebSocketMultiplayerPeer {
 
@@ -14,9 +14,8 @@ protected:
 	static void _bind_methods();
 
 public:
-
 	virtual void poll() = 0;
-	virtual Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>(), bool gd_mp_api=false) = 0;
+	virtual Error listen(int p_port, PoolVector<String> p_protocols = PoolVector<String>(), bool gd_mp_api = false) = 0;
 	virtual void stop() = 0;
 	virtual bool is_listening() const = 0;
 	virtual bool has_peer(int p_id) const = 0;

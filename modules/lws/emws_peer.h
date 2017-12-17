@@ -14,7 +14,6 @@ class EMWSPeer : public WebSocketPeer {
 	GDCIIMPL(EMWSPeer, WebSocketPeer);
 
 private:
-
 	enum {
 		PACKET_BUFFER_SIZE = 65536 - 5 // 4 bytes for the size, 1 for for type
 	};
@@ -28,7 +27,6 @@ private:
 	bool _was_string;
 
 public:
-
 	void read_msg(uint8_t *p_data, uint32_t p_size, bool p_is_string);
 	void set_sock(int sock);
 	virtual int get_available_packet_count() const;
