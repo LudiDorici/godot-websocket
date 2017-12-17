@@ -4,7 +4,7 @@ This module allows for easy creation of **WebSocket Client and Server** using [l
 
 The client API is also available in project exported to HTML5 using native Javascript code.
 
-A small demo project is available in `lws_demo` to show how to use the module.
+A small demo project is available in `websocket_chat_demo` to show how to use the module.
 
 This module is still a work in progress.
 
