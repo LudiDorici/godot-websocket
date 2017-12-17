@@ -10,7 +10,7 @@ config_version=3
 
 [application]
 
-config/name="Libwebsockets Demo"
+config/name="Websocket Chat Demo"
 run/main_scene="res://combo/combo.tscn"
 config/icon="res://icon.png"
 
