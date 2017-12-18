@@ -11,6 +11,9 @@ class EMWSClient : public WebSocketClient {
 
 	GDCIIMPL(EMWSClient, WebSocketClient);
 
+private:
+	int _js_id;
+
 public:
 	bool _is_connecting;
 

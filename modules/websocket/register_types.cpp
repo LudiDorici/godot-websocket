@@ -44,20 +44,20 @@ void register_websocket_types() {
 #ifdef JAVASCRIPT_ENABLED
 	EM_ASM({
 		var IDHandler = {};
-		IDHandler["ids"] = [];
-		// get an integer ID for a JS object. this keeps a reference to it, preventing GC'ing
+		IDHandler["ids"] = {};
+		IDHandler["has"] = function(id) {
+			return IDHandler.ids.hasOwnProperty(id);
+		};
 		IDHandler["add"] = function(obj) {
-			var id = IDHandler.ids.length;
+			var id = crypto.getRandomValues(new Int32Array(32))[0];
 			IDHandler.ids[id] = obj;
 			return id;
 		};
-		// get a JS object from an integer ID
 		IDHandler["get"] = function(id) {
 			return IDHandler.ids[id];
 		};
-		// releases an object that has an ID. this allows it to be GD'd
 		IDHandler["remove"] = function(id) {
-			IDHandler.ids[id] = null;
+			delete IDHandler.ids[id];
 		};
 		Module["IDHandler"] = IDHandler;
 	});

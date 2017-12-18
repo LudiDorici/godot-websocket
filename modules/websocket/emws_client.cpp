@@ -53,19 +53,24 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 	/* clang-format off */
 	int peer_sock = EM_ASM_INT({
 		var socket = new WebSocket(UTF8ToString($1), UTF8ToString($2).split(","));
+		var c_ptr = Module.IDHandler.get($0);
 		socket.binaryType = "arraybuffer";
 
 		// Connection opened
 		socket.addEventListener("open", function (event) {
+			if (!Module.IDHandler.has($0))
+				return; // Godot Object is gone!
 			Module.ccall("_esws_on_connect",
 					"void",
 					["number", "string"],
-					[$0, socket.protocol]
+					[c_ptr, socket.protocol]
 			);
 		});
 
 		// Listen for messages
 		socket.addEventListener("message", function (event) {
+			if (!Module.IDHandler.has($0))
+				return; // Godot Object is gone!
 			var buffer;
 			var is_string = 0;
 			if (event.data instanceof ArrayBuffer) {
@@ -95,32 +100,36 @@ Error EMWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port,
 			Module.ccall("_esws_on_message",
 					"void",
 					["number", "number", "number", "number"],
-					[$0, out, len, is_string]
+					[c_ptr, out, len, is_string]
 			);
 			Module._free(out);
 		});
 
 		socket.addEventListener("error", function (event) {
+			if (!Module.IDHandler.has($0))
+				return; // Godot Object is gone!
 			Module.ccall("_esws_on_error",
 					"void",
 					["number"],
-					[$0]
+					[c_ptr]
 			);
 		});
 
 		socket.addEventListener("close", function (event) {
+			if (!Module.IDHandler.has($0))
+				return; // Godot Object is gone!
 			var was_clean = 0;
 			if (event.was_clean)
 				was_clean = 1;
 			Module.ccall("_esws_on_close",
 					"void",
 					["number", "number", "string", "number"],
-					[$0, event.code, event.reason, was_clean]
+					[c_ptr, event.code, event.reason, was_clean]
 			);
 		});
 
 		return Module.IDHandler.add(socket);
-	}, this, str.utf8().get_data(), proto_string.utf8().get_data());
+	}, _js_id, str.utf8().get_data(), proto_string.utf8().get_data());
 	/* clang-format on */
 
 	static_cast<Ref<EMWSPeer> >(_peer)->set_sock(peer_sock);
@@ -165,12 +174,22 @@ uint16_t EMWSClient::get_connected_port() const {
 EMWSClient::EMWSClient() {
 	_is_connecting = false;
 	_peer = Ref<EMWSPeer>(memnew(EMWSPeer));
+	/* clang-format off */
+	_js_id = EM_ASM_INT({
+		return Module.IDHandler.add($0);
+	}, this);
+	/* clang-format on */
 };
 
 EMWSClient::~EMWSClient() {
 
 	disconnect_from_host();
 	_peer = Ref<EMWSPeer>();
+	/* clang-format off */
+	EM_ASM({
+		Module.IDHandler.remove($0);
+	}, _js_id);
+	/* clang-format on */
 };
 
 #endif // JAVASCRIPT_ENABLED
