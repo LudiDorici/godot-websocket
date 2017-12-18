@@ -40,7 +40,7 @@ Error WebSocketClient::connect_to_url(String p_url, PoolVector<String> p_protoco
 		host = host.substr(0, p_len);
 	}
 
-	connect_to_host(host, path, port, ssl, p_protocols);
+	return connect_to_host(host, path, port, ssl, p_protocols);
 }
 
 bool WebSocketClient::is_server() const {
