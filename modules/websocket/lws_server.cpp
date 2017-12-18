@@ -20,7 +20,7 @@ Error LWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_a
 	PoolVector<struct lws_protocols>::Read pr = protocol_structs.read();
 
 	info.port = p_port;
-	info.user = this;
+	info.user = get_lws_ref();
 	info.protocols = &pr[0];
 	info.gid = -1;
 	info.uid = -1;
@@ -132,12 +132,12 @@ Ref<WebSocketPeer> LWSServer::get_peer(int p_id) const {
 
 LWSServer::LWSServer() {
 	context = NULL;
-	free_context = false;
-	is_polling = false;
+	_this_ref = NULL;
 }
 
 LWSServer::~LWSServer() {
 	stop();
+	invalidate_lws_ref();
 }
 
 #endif // JAVASCRIPT_ENABLED

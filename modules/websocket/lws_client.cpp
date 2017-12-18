@@ -35,7 +35,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	info.gid = -1;
 	info.uid = -1;
 	//info.ws_ping_pong_interval = 5;
-	info.user = this;
+	info.user = get_lws_ref();
 	context = lws_create_context(&info);
 
 	ERR_FAIL_COND_V(context == NULL, FAILED);
@@ -87,7 +87,7 @@ int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 		case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
 			_on_error();
 			destroy_context();
-			break;
+			return 1; // we should close the connection (would probably happen anyway)
 
 		case LWS_CALLBACK_CLOSED:
 			peer_data->in_count = 0;
@@ -156,8 +156,7 @@ uint16_t LWSClient::get_connected_port() const {
 
 LWSClient::LWSClient() {
 	context = NULL;
-	free_context = false;
-	is_polling = false;
+	_this_ref = NULL;
 	_peer = Ref<LWSPeer>(memnew(LWSPeer));
 };
 
@@ -165,6 +164,7 @@ LWSClient::~LWSClient() {
 
 	disconnect_from_host();
 	_peer = Ref<LWSPeer>();
+	invalidate_lws_ref();
 };
 
 #endif // JAVASCRIPT_ENABLED

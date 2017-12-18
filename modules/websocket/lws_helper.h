@@ -7,9 +7,76 @@
 #include "core/ring_buffer.h"
 #include "lws_peer.h"
 
+struct _LWSRef {
+	bool free_context;
+	bool is_polling;
+	bool is_valid;
+	bool is_destroying;
+	void *obj;
+};
+
+static _LWSRef *_lws_create_ref(void *obj) {
+
+	_LWSRef *out = (_LWSRef *)memalloc(sizeof(_LWSRef));
+	out->is_destroying = false;
+	out->free_context = false;
+	out->is_polling = false;
+	out->obj = obj;
+	out->is_valid = true;
+	return out;
+}
+
+static bool _lws_free_ref(_LWSRef *ref) {
+	if (ref == NULL)
+		return false;
+
+	if (ref->is_polling) {
+		ref->is_valid = false;
+		return false;
+	}
+
+	memfree(ref);
+	return true;
+}
+
+static bool _lws_destroy(struct lws_context *context, _LWSRef *ref) {
+	if (context == NULL || ref->is_destroying)
+		return false;
+
+	if (ref->is_polling) {
+		ref->free_context = true;
+		return false;
+	}
+
+	ref->is_destroying = true;
+	lws_context_destroy(context);
+	_lws_free_ref(ref);
+	return true;
+}
+
+static bool _lws_poll(struct lws_context *context, _LWSRef *ref) {
+
+	ERR_FAIL_COND_V(context == NULL, false);
+	ERR_FAIL_COND_V(ref == NULL, false);
+
+	ref->is_polling = true;
+	lws_service(context, 0);
+	ref->is_polling = false;
+
+	if (!ref->free_context)
+		return false; // Nothing to do
+
+	bool is_valid = ref->is_valid; // Might have been destroyed by poll
+
+	_lws_destroy(context, ref); // Will destroy context and ref
+
+	return is_valid; // If the object should NULL its context and ref
+}
+
 /* clang-format off */
 #define LWS_HELPER(CNAME) \
 protected:															\
+	struct _LWSRef *_this_ref;												\
 	struct lws_context *context;												\
 	bool is_polling;													\
 	bool free_context;													\
@@ -23,8 +90,22 @@ protected:															\
 			return 0;												\
 		}														\
 																\
-		CNAME *helper = (CNAME *)lws_context_user(lws_get_context(wsi));						\
+		struct _LWSRef *ref = (struct _LWSRef *)lws_context_user(lws_get_context(wsi));					\
+		if (!ref->is_valid)												\
+			return 1;												\
+		CNAME *helper = (CNAME *)ref->obj;										\
 		return helper->_handle_cb(wsi, reason, user, in, len);								\
+	}															\
+																\
+	void invalidate_lws_ref() {												\
+		if (_this_ref != NULL)												\
+			_this_ref->is_valid = false;										\
+	}															\
+																\
+	_LWSRef *get_lws_ref() {												\
+		if (_this_ref == NULL)												\
+			_this_ref = _lws_create_ref(this);									\
+		return _this_ref;												\
 	}															\
 																\
 	/*															\
@@ -69,20 +150,12 @@ protected:															\
 	}															\
 																\
 	void destroy_context() {												\
-		if (context == NULL)												\
-			return;													\
-																\
-		if (is_polling) {												\
-			free_context = true;											\
-																\
-		} else {													\
-			struct lws_context *tmp = context;									\
-			context = NULL;												\
-			lws_context_destroy(tmp);										\
-			free_context = false;											\
+		if (_lws_destroy(context, _this_ref)) {										\
 			protocol_structs.resize(0);										\
 			protocol_names.resize(0);										\
 			protocol_string.resize(0);										\
+			context = NULL;												\
+			_this_ref = NULL;											\
 		}														\
 	}															\
 																\
@@ -92,11 +165,9 @@ public:																\
 	void _lws_poll() {													\
 		ERR_FAIL_COND(context == NULL);											\
 																\
-		is_polling = true;												\
-		lws_service(context, 0);											\
-		is_polling = false;												\
-		if (free_context) {												\
-			destroy_context();											\
+		if (::_lws_poll(context, _this_ref)) {										\
+			context = NULL;												\
+			_this_ref = NULL;											\
 		}														\
 	}															\
 																\
