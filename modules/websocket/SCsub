@@ -12,22 +12,22 @@ helper_dir = "win32helpers/"
 openssl_dir = "#thirdparty/openssl/"
 thirdparty_sources = [
     "alloc.c",
-    "base64-decode.c",
-    "client.c",
-    "client-handshake.c",
-    "client-parser.c",
+    "misc/base64-decode.c",
+    "client/client.c",
+    "client/client-handshake.c",
+    "client/client-parser.c",
     "context.c",
 #    "daemonize.c",
-    "extension.c",
-    "extension-permessage-deflate.c",
-    "fops-zip.c",
+    "ext/extension.c",
+    "ext/extension-permessage-deflate.c",
+    "server/fops-zip.c",
 #    "getifaddrs.c",
     "handshake.c",
     "header.c",
 #    "hpack.c",
 #    "http2.c",
-    "lejp.c",
-    "lejp-conf.c",
+    "misc/lejp.c",
+    "server/lejp-conf.c",
 #    "libev.c",
 #    "libevent.c",
 #    "libuv.c",
@@ -35,30 +35,30 @@ thirdparty_sources = [
 #    "lws-plat-esp32.c",
 #    "lws-plat-esp8266.c",
 #    "lws-plat-optee.c",
-    "minihuf.c",
+##    "minihuf.c",
     "minilex.c",
     "output.c",
-    "parsers.c",
+    "server/parsers.c",
     "pollfd.c",
-    "ranges.c",
+    "server/ranges.c",
 #    "rewrite.c",
 #    "romfs.c",
-    "server.c",
-    "server-handshake.c",
+    "server/server.c",
+    "server/server-handshake.c",
     "service.c",
-    "sha-1.c",
+    "misc/sha-1.c",
 #    "smtp.c",
     "ssl.c",
-    "ssl-client.c",
+    "client/ssl-client.c",
 #    "ssl-http2.c",
-    "ssl-server.c",
+    "server/ssl-server.c",
 
 ]
 
 if env_lws["platform"] == "windows":
-    thirdparty_sources += ["lws-plat-win.c", helper_dir + "getopt.c", helper_dir + "getopt_long.c", helper_dir + "gettimeofday.c"]
+    thirdparty_sources += ["plat/lws-plat-win.c", helper_dir + "getopt.c", helper_dir + "getopt_long.c", helper_dir + "gettimeofday.c"]
 else:
-    thirdparty_sources += ["lws-plat-unix.c"]
+    thirdparty_sources += ["plat/lws-plat-unix.c"]
 
 
 thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
