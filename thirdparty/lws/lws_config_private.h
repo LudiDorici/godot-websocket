@@ -11,17 +11,19 @@
 /* #undef USE_CYASSL */
 
 /* Define to 1 if you have the `bzero' function. */
-#if !defined(WINDOWS_ENABLED)
-/* Windows has no bzero function */
 #define LWS_HAVE_BZERO
+/*  Windows has no bzero function */
+#ifdef WINDOWS_ENABLED
+#undef LWS_HAVE_BZERO
 #endif
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define LWS_HAVE_DLFCN_H
 
-#ifndef NO_FCNTL
-	/* Define to 1 if you have the <fcntl.h> header file. */
-	#define LWS_HAVE_FCNTL_H
+/* Define to 1 if you have the <fcntl.h> header file. */
+#define LWS_HAVE_FCNTL_H
+#ifdef NO_FCNTL
+#undef LWS_HAVE_FCNTL_H
 #endif
 
 /* Define to 1 if you have the `fork' function. */
@@ -75,8 +77,9 @@
 #define LWS_HAVE_STRING_H
 
 /* Define to 1 if you have the <sys/prctl.h> header file. */
-#if !defined(OSX_ENABLED) && !defined(IPHONE_ENABLED)
 #define LWS_HAVE_SYS_PRCTL_H
+#if defined(OSX_ENABLED) || defined(IPHONE_ENABLED)
+#undef LWS_HAVE_SYS_PRCTL_H
 #endif
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
@@ -125,11 +128,9 @@
 /* #undef realloc */
 
 /* Define to 1 if we have getifaddrs */
-
-#if !defined(ANDROID_ENABLED)
-#define LWS_HAVE_GETIFADDRS 1
-#else
-#define LWS_HAVE_GETIFADDRS 0
+#define LWS_HAVE_GETIFADDRS
+#if defined(ANDROID_ENABLED)
+#undef LWS_HAVE_GETIFADDRS
 #define LWS_BUILTIN_GETIFADDRS
 #endif
 
