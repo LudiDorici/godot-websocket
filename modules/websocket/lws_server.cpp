@@ -33,6 +33,8 @@
 
 Error LWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_api) {
 
+	ERR_FAIL_COND_V(context != NULL, FAILED);
+
 	_is_multiplayer = gd_mp_api;
 
 	struct lws_context_creation_info info;
@@ -45,11 +47,10 @@ Error LWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_a
 
 	// Prepare lws protocol structs
 	_make_protocols(p_protocols);
-	PoolVector<struct lws_protocols>::Read pr = protocol_structs.read();
 
 	info.port = p_port;
 	info.user = get_lws_ref();
-	info.protocols = &pr[0];
+	info.protocols = _lws_structs;
 	info.gid = -1;
 	info.uid = -1;
 	//info.ws_ping_pong_interval = 5;
@@ -100,6 +101,8 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 		}
 
 		case LWS_CALLBACK_CLOSED: {
+			if (peer_data == NULL)
+				return -1;
 			int32_t id = peer_data->peer_id;
 			if (_peer_map.has(id)) {
 				_peer_map[id]->close();
@@ -110,7 +113,7 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			peer_data->rbr.resize(0);
 			peer_data->rbw.resize(0);
 			_on_disconnect(id);
-			return 0; // we can end here
+			return -1; // we can end here
 		}
 
 		case LWS_CALLBACK_RECEIVE: {
@@ -164,8 +167,8 @@ LWSServer::LWSServer() {
 }
 
 LWSServer::~LWSServer() {
-	stop();
 	invalidate_lws_ref();
+	stop();
 }
 
 #endif // JAVASCRIPT_ENABLED

@@ -33,7 +33,7 @@
 
 Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, bool p_ssl, PoolVector<String> p_protocols) {
 
-	disconnect_from_host();
+	ERR_FAIL_COND_V(context != NULL, FAILED);
 
 	IP_Address addr;
 
@@ -51,7 +51,6 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	_make_protocols(p_protocols);
 
 	// init lws client
-	PoolVector<struct lws_protocols>::Read pr = protocol_structs.read();
 	struct lws_context_creation_info info;
 	struct lws_client_connect_info i;
 
@@ -59,7 +58,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	memset(&info, 0, sizeof info);
 
 	info.port = CONTEXT_PORT_NO_LISTEN;
-	info.protocols = &pr[0];
+	info.protocols = _lws_structs;
 	info.gid = -1;
 	info.uid = -1;
 	//info.ws_ping_pong_interval = 5;
@@ -77,7 +76,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	strncpy(pbuf, p_path.utf8().get_data(), 2048);
 
 	i.context = context;
-	i.protocol = protocol_string.get_data();
+	i.protocol = _lws_strings;
 	i.address = abuf;
 	i.host = hbuf;
 	i.path = pbuf;
@@ -115,7 +114,7 @@ int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 		case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
 			_on_error();
 			destroy_context();
-			return 1; // we should close the connection (would probably happen anyway)
+			return -1; // we should close the connection (would probably happen anyway)
 
 		case LWS_CALLBACK_CLOSED:
 			peer_data->in_count = 0;
@@ -125,7 +124,7 @@ int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			peer->close();
 			destroy_context();
 			_on_disconnect();
-			return 0; // we can end here
+			return -1; // we can end here
 
 		case LWS_CALLBACK_CLIENT_RECEIVE:
 			peer->read_wsi(in, len);
@@ -190,9 +189,9 @@ LWSClient::LWSClient() {
 
 LWSClient::~LWSClient() {
 
+	invalidate_lws_ref();
 	disconnect_from_host();
 	_peer = Ref<LWSPeer>();
-	invalidate_lws_ref();
 };
 
 #endif // JAVASCRIPT_ENABLED

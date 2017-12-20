@@ -48,7 +48,6 @@ public:
 	virtual bool is_listening() const = 0;
 	virtual bool has_peer(int p_id) const = 0;
 	virtual Ref<WebSocketPeer> get_peer(int p_id) const = 0;
-	virtual PoolVector<String> get_protocols() const = 0;
 	virtual bool is_server() const;
 	ConnectionStatus get_connection_status() const;
 

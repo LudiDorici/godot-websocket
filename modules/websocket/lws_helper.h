@@ -41,9 +41,11 @@ struct _LWSRef {
 	bool is_valid;
 	bool is_destroying;
 	void *obj;
+	struct lws_protocols *lws_structs;
+	char *lws_strings;
 };
 
-static _LWSRef *_lws_create_ref(void *obj) {
+static _LWSRef *_lws_create_ref(void *obj, struct lws_protocols *lws_structs, char *lws_strings) {
 
 	_LWSRef *out = (_LWSRef *)memalloc(sizeof(_LWSRef));
 	out->is_destroying = false;
@@ -51,20 +53,9 @@ static _LWSRef *_lws_create_ref(void *obj) {
 	out->is_polling = false;
 	out->obj = obj;
 	out->is_valid = true;
+	out->lws_structs = lws_structs;
+	out->lws_strings = lws_strings;
 	return out;
-}
-
-static bool _lws_free_ref(_LWSRef *ref) {
-	if (ref == NULL)
-		return false;
-
-	if (ref->is_polling) {
-		ref->is_valid = false;
-		return false;
-	}
-
-	memfree(ref);
-	return true;
 }
 
 static bool _lws_destroy(struct lws_context *context, _LWSRef *ref) {
@@ -78,7 +69,11 @@ static bool _lws_destroy(struct lws_context *context, _LWSRef *ref) {
 
 	ref->is_destroying = true;
 	lws_context_destroy(context);
-	_lws_free_ref(ref);
+	// Free strings and structs
+	memfree(ref->lws_structs);
+	memfree(ref->lws_strings);
+	// Free ref
+	memfree(ref);
 	return true;
 }
 
@@ -106,10 +101,8 @@ static bool _lws_poll(struct lws_context *context, _LWSRef *ref) {
 protected:															\
 	struct _LWSRef *_this_ref;												\
 	struct lws_context *context;												\
-	bool is_polling;													\
-	bool free_context;													\
-	PoolVector<CharString> protocol_names;											\
-	PoolVector<struct lws_protocols> protocol_structs;									\
+	struct lws_protocols *_lws_structs;											\
+	char *_lws_strings;													\
 	CharString protocol_string;												\
 																\
 	static int _lws_gd_callback(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len) {	\
@@ -132,7 +125,7 @@ protected:															\
 																\
 	_LWSRef *get_lws_ref() {												\
 		if (_this_ref == NULL)												\
-			_this_ref = _lws_create_ref(this);									\
+			_this_ref = _lws_create_ref(this, _lws_structs, _lws_strings);						\
 		return _this_ref;												\
 	}															\
 																\
@@ -140,50 +133,56 @@ protected:															\
 	 * prepare the protocol_structs to be fed to context									\
 	 * also prepare the protocol string used by the client									\
 	 */															\
-	void _make_protocols(PoolVector<String> names) {									\
+	void _make_protocols(PoolVector<String> p_names) {									\
+		/* the input strings might go away after this call,								\
+		 * we need to copy them. Will clear them when									\
+		 * detroying the context */											\
 		int i;														\
-		int len = names.size();												\
+		int len = p_names.size();											\
 		size_t data_size = sizeof(struct LWSPeer::PeerData);								\
-		protocol_structs.resize(len + 2);										\
-		protocol_names.resize(len);											\
+		PoolVector<String>::Read pnr = p_names.read();									\
 																\
-		/* set the protocol string for client */									\
-		protocol_string = names.join(",").ascii();									\
+		/* LWS protocol structs (for server) */										\
+		_lws_structs = (struct lws_protocols *)memalloc(sizeof(struct lws_protocols)*(len+2));				\
 																\
-		PoolVector<struct lws_protocols>::Write psw = protocol_structs.write();						\
-		PoolVector<String>::Read pnr = names.read();									\
-		PoolVector<CharString>::Write pnw = protocol_names.write();							\
+		CharString strings = p_names.join(",").ascii();									\
+		int str_len = strings.length();											\
+		/* Joined string of protocols, double the size: comma separated first, NULL separated last */			\
+		_lws_strings = (char *)memalloc((str_len + 1) * 2); /* plus the terminator */					\
+		copymem(_lws_strings, strings.get_data(), str_len);								\
+		_lws_strings[str_len] = '\0'; /* NULL terminator */								\
+		/* NULL terminated strings to be used in protocol structs */							\
+		copymem(&_lws_strings[str_len+1], strings.get_data(), str_len);							\
+		_lws_strings[(str_len*2)+1] = '\0'; /* NULL terminator */							\
+		int pos = str_len+1;												\
 																\
 		/* the first protocol is always http-only */									\
-		psw[0].name = "http-only";											\
-		psw[0].callback = &CNAME::_lws_gd_callback;									\
-		psw[0].per_session_data_size = data_size;									\
-		psw[0].rx_buffer_size = 0;											\
+		_lws_structs[0].name = "http-only";										\
+		_lws_structs[0].callback = &CNAME::_lws_gd_callback;								\
+		_lws_structs[0].per_session_data_size = data_size;								\
+		_lws_structs[0].rx_buffer_size = 0;										\
 		/* add user defined protocols */										\
 		for (i = 0; i < len; i++) {											\
-			/* the input strings might go away after this call,							\
-			 * we need to copy them. Will clear them when								\
-			 * detroying the context */										\
-			pnw[i] = pnr[i].ascii();										\
-			psw[i + 1].name = pnw[i].get_data();									\
-			psw[i + 1].callback = &CNAME::_lws_gd_callback;								\
-			psw[i + 1].per_session_data_size = data_size;								\
-			psw[i + 1].rx_buffer_size = 0;										\
+			_lws_structs[i + 1].name = (const char *)&_lws_strings[pos];						\
+			_lws_structs[i + 1].callback = &CNAME::_lws_gd_callback;						\
+			_lws_structs[i + 1].per_session_data_size = data_size;							\
+			_lws_structs[i + 1].rx_buffer_size = 0;									\
+			pos += pnr[i].ascii().length()+1;									\
+			_lws_strings[pos-1] = '\0';										\
 		}														\
 		/* add protocols terminator */											\
-		psw[len + 1].name = NULL;											\
-		psw[len + 1].callback = NULL;											\
-		psw[len + 1].per_session_data_size = 0;										\
-		psw[len + 1].rx_buffer_size = 0;										\
+		_lws_structs[len + 1].name = NULL;										\
+		_lws_structs[len + 1].callback = NULL;										\
+		_lws_structs[len + 1].per_session_data_size = 0;								\
+		_lws_structs[len + 1].rx_buffer_size = 0;									\
 	}															\
 																\
 	void destroy_context() {												\
 		if (_lws_destroy(context, _this_ref)) {										\
-			protocol_structs.resize(0);										\
-			protocol_names.resize(0);										\
-			protocol_string.resize(0);										\
 			context = NULL;												\
 			_this_ref = NULL;											\
+			_lws_structs = NULL;											\
+			_lws_strings = NULL;											\
 		}														\
 	}															\
 																\
@@ -197,15 +196,6 @@ public:																\
 			context = NULL;												\
 			_this_ref = NULL;											\
 		}														\
-	}															\
-																\
-	PoolVector<String> get_protocols() const {										\
-		int i = 0;													\
-		PoolVector<String> out;												\
-		for (i = 0; i < protocol_names.size(); i++) {									\
-			out.append(String(protocol_names[i].get_data()));							\
-		}														\
-		return out;													\
 	}															\
 																\
 protected:
