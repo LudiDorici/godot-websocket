@@ -40,16 +40,14 @@ Error LWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_a
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof info);
 
-	stop();
-
 	if (p_protocols.size() == 0) // default to binary protocol
 		p_protocols.append(String("binary"));
 
 	// Prepare lws protocol structs
-	_make_protocols(p_protocols);
+	_lws_make_protocols(this, &LWSServer::_lws_gd_callback, p_protocols, &_lws_structs, &_lws_names, &_lws_ref);
 
 	info.port = p_port;
-	info.user = get_lws_ref();
+	info.user = _lws_ref;
 	info.protocols = _lws_structs;
 	info.gid = -1;
 	info.uid = -1;
@@ -163,11 +161,11 @@ Ref<WebSocketPeer> LWSServer::get_peer(int p_id) const {
 
 LWSServer::LWSServer() {
 	context = NULL;
-	_this_ref = NULL;
+	_lws_ref = NULL;
 }
 
 LWSServer::~LWSServer() {
-	invalidate_lws_ref();
+	invalidate_lws_ref(); // we do not want any more callbacks
 	stop();
 }
 

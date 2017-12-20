@@ -48,7 +48,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	// prepare protocols
 	if (p_protocols.size() == 0) // default to binary protocol
 		p_protocols.append("binary");
-	_make_protocols(p_protocols);
+	_lws_make_protocols(this, &LWSClient::_lws_gd_callback, p_protocols, &_lws_structs, &_lws_names, &_lws_ref);
 
 	// init lws client
 	struct lws_context_creation_info info;
@@ -62,7 +62,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	info.gid = -1;
 	info.uid = -1;
 	//info.ws_ping_pong_interval = 5;
-	info.user = get_lws_ref();
+	info.user = _lws_ref;
 	context = lws_create_context(&info);
 
 	ERR_FAIL_COND_V(context == NULL, FAILED);
@@ -76,7 +76,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	strncpy(pbuf, p_path.utf8().get_data(), 2048);
 
 	i.context = context;
-	i.protocol = _lws_strings;
+	i.protocol = _lws_names;
 	i.address = abuf;
 	i.host = hbuf;
 	i.path = pbuf;
@@ -124,7 +124,7 @@ int LWSClient::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			peer->close();
 			destroy_context();
 			_on_disconnect();
-			return -1; // we can end here
+			return 0; // we can end here
 
 		case LWS_CALLBACK_CLIENT_RECEIVE:
 			peer->read_wsi(in, len);
@@ -183,13 +183,13 @@ uint16_t LWSClient::get_connected_port() const {
 
 LWSClient::LWSClient() {
 	context = NULL;
-	_this_ref = NULL;
+	_lws_ref = NULL;
 	_peer = Ref<LWSPeer>(memnew(LWSPeer));
 };
 
 LWSClient::~LWSClient() {
 
-	invalidate_lws_ref();
+	invalidate_lws_ref(); // We do not want any more callback
 	disconnect_from_host();
 	_peer = Ref<LWSPeer>();
 };
