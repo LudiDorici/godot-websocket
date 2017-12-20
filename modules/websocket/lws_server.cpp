@@ -44,21 +44,25 @@ Error LWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_a
 		p_protocols.append(String("binary"));
 
 	// Prepare lws protocol structs
-	_lws_make_protocols(this, &LWSServer::_lws_gd_callback, p_protocols, &_lws_structs, &_lws_names, &_lws_ref);
+	_lws_make_protocols(this, &LWSServer::_lws_gd_callback, p_protocols, &_lws_ref);
 
 	info.port = p_port;
 	info.user = _lws_ref;
-	info.protocols = _lws_structs;
+	info.protocols = _lws_ref->lws_structs;
 	info.gid = -1;
 	info.uid = -1;
 	//info.ws_ping_pong_interval = 5;
 
 	context = lws_create_context(&info);
 
-	if (context != NULL)
-		return OK;
+	if (context == NULL) {
+		_lws_free_ref(_lws_ref);
+		_lws_ref = NULL;
+		ERR_EXPLAIN("Unable to create LWS context");
+		ERR_FAIL_V(FAILED);
+	}
 
-	return FAILED;
+	return OK;
 }
 
 bool LWSServer::is_listening() const {

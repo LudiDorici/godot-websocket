@@ -48,7 +48,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	// prepare protocols
 	if (p_protocols.size() == 0) // default to binary protocol
 		p_protocols.append("binary");
-	_lws_make_protocols(this, &LWSClient::_lws_gd_callback, p_protocols, &_lws_structs, &_lws_names, &_lws_ref);
+	_lws_make_protocols(this, &LWSClient::_lws_gd_callback, p_protocols, &_lws_ref);
 
 	// init lws client
 	struct lws_context_creation_info info;
@@ -58,14 +58,19 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	memset(&info, 0, sizeof info);
 
 	info.port = CONTEXT_PORT_NO_LISTEN;
-	info.protocols = _lws_structs;
+	info.protocols = _lws_ref->lws_structs;
 	info.gid = -1;
 	info.uid = -1;
 	//info.ws_ping_pong_interval = 5;
 	info.user = _lws_ref;
 	context = lws_create_context(&info);
 
-	ERR_FAIL_COND_V(context == NULL, FAILED);
+	if (context == NULL) {
+		_lws_free_ref(_lws_ref);
+		_lws_ref = NULL;
+		ERR_EXPLAIN("Unable to create lws context");
+		ERR_FAIL_V(FAILED);
+	}
 
 	char abuf[1024];
 	char hbuf[1024];
@@ -76,7 +81,7 @@ Error LWSClient::connect_to_host(String p_host, String p_path, uint16_t p_port, 
 	strncpy(pbuf, p_path.utf8().get_data(), 2048);
 
 	i.context = context;
-	i.protocol = _lws_names;
+	i.protocol = _lws_ref->lws_names;
 	i.address = abuf;
 	i.host = hbuf;
 	i.path = pbuf;

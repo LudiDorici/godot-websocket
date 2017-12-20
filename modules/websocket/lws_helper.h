@@ -45,7 +45,7 @@ struct _LWSRef {
 	char *lws_names;
 };
 
-static _LWSRef *_lws_create_ref(void *obj, struct lws_protocols *lws_structs, char *lws_names) {
+static _LWSRef *_lws_create_ref(void *obj) {
 
 	_LWSRef *out = (_LWSRef *)memalloc(sizeof(_LWSRef));
 	out->is_destroying = false;
@@ -53,9 +53,17 @@ static _LWSRef *_lws_create_ref(void *obj, struct lws_protocols *lws_structs, ch
 	out->is_polling = false;
 	out->obj = obj;
 	out->is_valid = true;
-	out->lws_structs = lws_structs;
-	out->lws_names = lws_names;
+	out->lws_structs = NULL;
+	out->lws_names = NULL;
 	return out;
+}
+
+static void _lws_free_ref(_LWSRef *ref) {
+	// Free strings and structs
+	memfree(ref->lws_structs);
+	memfree(ref->lws_names);
+	// Free ref
+	memfree(ref);
 }
 
 static bool _lws_destroy(struct lws_context *context, _LWSRef *ref) {
@@ -69,11 +77,7 @@ static bool _lws_destroy(struct lws_context *context, _LWSRef *ref) {
 
 	ref->is_destroying = true;
 	lws_context_destroy(context);
-	// Free strings and structs
-	memfree(ref->lws_structs);
-	memfree(ref->lws_names);
-	// Free ref
-	memfree(ref);
+	_lws_free_ref(ref);
 	return true;
 }
 
@@ -100,7 +104,7 @@ static bool _lws_poll(struct lws_context *context, _LWSRef *ref) {
  * prepare the protocol_structs to be fed to context
  * also prepare the protocol string used by the client
  */
-static void _lws_make_protocols(void *p_obj, lws_callback_function *p_callback, PoolVector<String> p_names, struct lws_protocols **r_structs, char **r_names, _LWSRef **r_lws_ref) {
+static void _lws_make_protocols(void *p_obj, lws_callback_function *p_callback, PoolVector<String> p_names, _LWSRef **r_lws_ref) {
 	/* the input strings might go away after this call,
 	 * we need to copy them. Will clear them when
 	 * detroying the context */
@@ -109,15 +113,25 @@ static void _lws_make_protocols(void *p_obj, lws_callback_function *p_callback, 
 	size_t data_size = sizeof(struct LWSPeer::PeerData);
 	PoolVector<String>::Read pnr = p_names.read();
 
+	/*
+	 * This is a reference connecting the object with lws
+	 * keep track of status, mallocs, etc.
+	 * Must survive as long the context
+	 * Must be freed manually when context creation fails.
+	 */
+	_LWSRef *ref = _lws_create_ref(p_obj);
+
 	/* LWS protocol structs */
-	*r_structs = (struct lws_protocols *)memalloc(sizeof(struct lws_protocols) * (len + 2));
+	ref->lws_structs = (struct lws_protocols *)memalloc(sizeof(struct lws_protocols) * (len + 2));
 
 	CharString strings = p_names.join(",").ascii();
 	int str_len = strings.length();
+
 	/* Joined string of protocols, double the size: comma separated first, NULL separated last */
-	*r_names = (char *)memalloc((str_len + 1) * 2); /* plus the terminator */
-	char *names_ptr = *r_names;
-	struct lws_protocols *structs_ptr = *r_structs;
+	ref->lws_names = (char *)memalloc((str_len + 1) * 2); /* plus the terminator */
+
+	char *names_ptr = ref->lws_names;
+	struct lws_protocols *structs_ptr = ref->lws_structs;
 
 	copymem(names_ptr, strings.get_data(), str_len);
 	names_ptr[str_len] = '\0'; /* NULL terminator */
@@ -146,7 +160,7 @@ static void _lws_make_protocols(void *p_obj, lws_callback_function *p_callback, 
 	structs_ptr[len + 1].per_session_data_size = 0;
 	structs_ptr[len + 1].rx_buffer_size = 0;
 
-	*r_lws_ref = _lws_create_ref(p_obj, structs_ptr, names_ptr);
+	*r_lws_ref = ref;
 }
 
 /* clang-format off */
@@ -154,8 +168,6 @@ static void _lws_make_protocols(void *p_obj, lws_callback_function *p_callback, 
 protected:															\
 	struct _LWSRef *_lws_ref;												\
 	struct lws_context *context;												\
-	struct lws_protocols *_lws_structs;											\
-	char *_lws_names;													\
 																\
 	static int _lws_gd_callback(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len) {	\
 																\
@@ -179,8 +191,6 @@ protected:															\
 		if (_lws_destroy(context, _lws_ref)) {										\
 			context = NULL;												\
 			_lws_ref = NULL;											\
-			_lws_structs = NULL;											\
-			_lws_names = NULL;											\
 		}														\
 	}															\
 																\
@@ -193,8 +203,6 @@ public:																\
 		if (::_lws_poll(context, _lws_ref)) {										\
 			context = NULL;												\
 			_lws_ref = NULL;											\
-			_lws_structs = NULL;											\
-			_lws_names = NULL;											\
 		}														\
 	}															\
 																\
