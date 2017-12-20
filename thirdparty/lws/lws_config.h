@@ -25,6 +25,9 @@
 
 /* #undef LWS_WITH_PLUGINS */
 /* #undef LWS_WITH_NO_LOGS */
+#ifndef DEBUG_ENABLED
+#define LWS_WITH_NO_LOGS
+#endif
 
 /* The Libwebsocket version */
 #define LWS_LIBRARY_VERSION "2.4.1"
