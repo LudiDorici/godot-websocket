@@ -67,6 +67,3 @@ func set_write_mode(mode):
 	_write_mode = mode
 	for c in _clients:
 		_clients[c].set_write_mode(_write_mode)
-
-func get_protocols():
-	return _server.get_protocols()
