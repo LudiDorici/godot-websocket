@@ -72,8 +72,8 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 	switch (reason) {
 		case LWS_CALLBACK_HTTP:
 			// no http for now
-			// closing immediately returning 1;
-			return 1;
+			// closing immediately returning -1;
+			return -1;
 
 		case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
 			// check header here?
@@ -100,7 +100,7 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 
 		case LWS_CALLBACK_CLOSED: {
 			if (peer_data == NULL)
-				return -1;
+				return 0;
 			int32_t id = peer_data->peer_id;
 			if (_peer_map.has(id)) {
 				_peer_map[id]->close();
@@ -111,7 +111,7 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 			peer_data->rbr.resize(0);
 			peer_data->rbw.resize(0);
 			_on_disconnect(id);
-			return -1; // we can end here
+			return 0; // we can end here
 		}
 
 		case LWS_CALLBACK_RECEIVE: {
