@@ -170,7 +170,6 @@ lws_wsi_server_new(struct lws_vhost *vh, struct lws *parent_wsi,
 	h2n->highest_sid_opened = sid;
 	wsi->u.h2.my_sid = sid;
 	wsi->http2_substream = 1;
-	wsi->seen_nonpseudoheader = 0;
 
 	wsi->u.h2.parent_wsi = parent_wsi;
 	/* new guy's sibling is whoever was the first child before */
@@ -750,7 +749,7 @@ lws_h2_parse_frame_header(struct lws *wsi)
 		/* if it's data, either way no swsi means CLOSED state */
 		if (h2n->type == LWS_H2_FRAME_TYPE_DATA) {
 			lws_h2_goaway(wsi, H2_ERR_STREAM_CLOSED,
-				      "Data for nonexistent sid");
+				      "Data for nonexistant sid");
 			return 0;
 		}
 		/* if the sid is credible, treat as wsi for it closed */
@@ -761,7 +760,7 @@ lws_h2_parse_frame_header(struct lws *wsi)
 			lwsl_info("%s: wsi %p, No child for sid %d, rx cmd %d\n",
 			  __func__, h2n->swsi, h2n->sid, h2n->type);
 			lws_h2_goaway(wsi, H2_ERR_STREAM_CLOSED,
-				     "Data for nonexistent sid");
+				     "Data for nonexistant sid");
 			return 0;
 		}
 	}
@@ -1004,6 +1003,7 @@ lws_h2_parse_frame_header(struct lws *wsi)
 		h2n->cont_exp = !(h2n->flags & LWS_H2_FLAG_END_HEADERS);
 		h2n->cont_exp_sid = h2n->sid;
 		h2n->cont_exp_headers = 1;
+		h2n->seen_nonpseudoheader = 0;
 		lws_header_table_reset(h2n->swsi, 0);
 
 update_end_headers:
