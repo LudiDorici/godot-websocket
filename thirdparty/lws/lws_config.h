@@ -16,27 +16,30 @@
 /* Also define to 1 (in addition to USE_WOLFSSL) when using the
   (older) CyaSSL library */
 /* #undef USE_OLD_CYASSL */
-/* #undef LWS_USE_BORINGSSL */
+/* #undef LWS_WITH_BORINGSSL */
 
-/* #undef LWS_USE_MBEDTLS */
-/* #undef LWS_USE_POLARSSL */
+/* #undef LWS_WITH_MBEDTLS */
+/* #undef LWS_WITH_POLARSSL */
 /* #undef LWS_WITH_ESP8266 */
 /* #undef LWS_WITH_ESP32 */
 
 /* #undef LWS_WITH_PLUGINS */
 /* #undef LWS_WITH_NO_LOGS */
+#ifndef DEBUG_ENABLED
+#define LWS_WITH_NO_LOGS
+#endif
 
 /* The Libwebsocket version */
-#define LWS_LIBRARY_VERSION "2.3.0"
+#define LWS_LIBRARY_VERSION "2.4.1"
 
 #define LWS_LIBRARY_VERSION_MAJOR 2
-#define LWS_LIBRARY_VERSION_MINOR 3
-#define LWS_LIBRARY_VERSION_PATCH 0
+#define LWS_LIBRARY_VERSION_MINOR 4
+#define LWS_LIBRARY_VERSION_PATCH 1
 /* LWS_LIBRARY_VERSION_NUMBER looks like 1005001 for e.g. version 1.5.1 */
 #define LWS_LIBRARY_VERSION_NUMBER (LWS_LIBRARY_VERSION_MAJOR*1000000)+(LWS_LIBRARY_VERSION_MINOR*1000)+LWS_LIBRARY_VERSION_PATCH
 
 /* The current git commit hash that we're building from */
-#define LWS_BUILD_HASH "fales@fales-desktop-v2.0.0-551-g9015d8b"
+#define LWS_BUILD_HASH "55f97b7806e07db2d4c8a158172cd309d0faf450"
 
 /* Build with OpenSSL support */
 #define LWS_OPENSSL_SUPPORT
@@ -50,25 +53,29 @@
 /* Turn off websocket extensions */
 /* #undef LWS_NO_EXTENSIONS */
 
-/* Disable libev io loop */
-#undef LWS_USE_LIBEV
+/* Enable libev io loop */
+/* #undef LWS_WITH_LIBEV */
+#undef LWS_WITH_LIBEV
 
-/* Disable libuv io loop */
-#undef LWS_USE_LIBUV
+/* Enable libuv io loop */
+/* #undef LWS_WITH_LIBUV */
+#undef LWS_WITH_LIBUV
 
-/* Disable libevent io loop */
-#undef LWS_USE_LIBEVENT
+/* Enable libevent io loop */
+/* #undef LWS_WITH_LIBEVENT */
+#undef LWS_WITH_LIBEVENT
 
 /* Build with support for ipv6 */
-/* #undef LWS_USE_IPV6 */
+/* #undef LWS_WITH_IPV6 */
 
+/* Build with support for UNIX domain socket */
+/* #undef LWS_WITH_UNIX_SOCK */
 #ifdef WINDOWS_ENABLED
-/* Build without support for UNIX domain socket */
 #undef LWS_USE_UNIX_SOCK
 #endif
 
 /* Build with support for HTTP2 */
-/* #undef LWS_USE_HTTP2 */
+/* #undef LWS_WITH_HTTP2 */
 
 /* Turn on latency measuring code */
 /* #undef LWS_LATENCY */
@@ -95,6 +102,7 @@
 /* #undef LWS_SSL_SERVER_WITH_ECDH_CERT */
 #define LWS_HAVE_SSL_CTX_set1_param
 #define LWS_HAVE_X509_VERIFY_PARAM_set1_host
+/* #undef LWS_HAVE_RSA_SET0_KEY */
 
 /* #undef LWS_HAVE_UV_VERSION_H */
 

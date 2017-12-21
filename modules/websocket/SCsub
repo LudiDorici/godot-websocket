@@ -11,59 +11,51 @@ thirdparty_dir = "#thirdparty/lws/"
 helper_dir = "win32helpers/"
 openssl_dir = "#thirdparty/openssl/"
 thirdparty_sources = [
+    "client/client.c",
+    "client/client-handshake.c",
+    "client/client-parser.c",
+    "client/ssl-client.c",
+
+    "ext/extension.c",
+    "ext/extension-permessage-deflate.c",
+
+    "server/fops-zip.c",
+    "server/lejp-conf.c",
+    "server/parsers.c",
+    "server/ranges.c",
+    "server/server.c",
+    "server/server-handshake.c",
+    "server/ssl-server.c",
+
+    "misc/base64-decode.c",
+    "misc/lejp.c",
+    "misc/sha-1.c",
+
     "alloc.c",
-    "base64-decode.c",
-    "client.c",
-    "client-handshake.c",
-    "client-parser.c",
     "context.c",
-#    "daemonize.c",
-    "extension.c",
-    "extension-permessage-deflate.c",
-    "fops-zip.c",
-#    "getifaddrs.c",
     "handshake.c",
     "header.c",
-#    "hpack.c",
-#    "http2.c",
-    "lejp.c",
-    "lejp-conf.c",
-#    "libev.c",
-#    "libevent.c",
-#    "libuv.c",
     "libwebsockets.c",
-#    "lws-plat-esp32.c",
-#    "lws-plat-esp8266.c",
-#    "lws-plat-optee.c",
-    "minihuf.c",
     "minilex.c",
     "output.c",
-    "parsers.c",
     "pollfd.c",
-    "ranges.c",
-#    "rewrite.c",
-#    "romfs.c",
-    "server.c",
-    "server-handshake.c",
     "service.c",
-    "sha-1.c",
-#    "smtp.c",
     "ssl.c",
-    "ssl-client.c",
-#    "ssl-http2.c",
-    "ssl-server.c",
 
 ]
 
-if env_lws["platform"] == "windows":
-    thirdparty_sources += ["lws-plat-win.c", helper_dir + "getopt.c", helper_dir + "getopt_long.c", helper_dir + "gettimeofday.c"]
-else:
-    thirdparty_sources += ["lws-plat-unix.c"]
+if env_lws["platform"] == "android": # Builtin getifaddrs
+    thirdparty_sources += ["misc/getifaddrs.c"]
+
+if env_lws["platform"] == "windows": # Winsock
+    thirdparty_sources += ["plat/lws-plat-win.c", helper_dir + "getopt.c", helper_dir + "getopt_long.c", helper_dir + "gettimeofday.c"]
+else: # Unix socket
+    thirdparty_sources += ["plat/lws-plat-unix.c"]
 
 
 thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
 
-if env_lws["platform"] == "javascript":
+if env_lws["platform"] == "javascript": # No need to add third party libraries at all
     pass
 else:
     env_lws.add_source_files(env.modules_sources, thirdparty_sources)
@@ -74,7 +66,5 @@ else:
 
     if env_lws["platform"] == "windows":
         env_lws.Append(CPPPATH=[thirdparty_dir + helper_dir])
-
-#env_lws.Append(CPPFLAGS=["-DGODOT_ENET", "-DLWS_WITH_STATIC", "-DLWS_WITH_SSL", ""])
 
 env_lws.add_source_files(env.modules_sources, "*.cpp")

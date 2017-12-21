@@ -33,33 +33,36 @@
 
 Error LWSServer::listen(int p_port, PoolVector<String> p_protocols, bool gd_mp_api) {
 
+	ERR_FAIL_COND_V(context != NULL, FAILED);
+
 	_is_multiplayer = gd_mp_api;
 
 	struct lws_context_creation_info info;
 	memset(&info, 0, sizeof info);
 
-	stop();
-
 	if (p_protocols.size() == 0) // default to binary protocol
 		p_protocols.append(String("binary"));
 
 	// Prepare lws protocol structs
-	_make_protocols(p_protocols);
-	PoolVector<struct lws_protocols>::Read pr = protocol_structs.read();
+	_lws_make_protocols(this, &LWSServer::_lws_gd_callback, p_protocols, &_lws_ref);
 
 	info.port = p_port;
-	info.user = get_lws_ref();
-	info.protocols = &pr[0];
+	info.user = _lws_ref;
+	info.protocols = _lws_ref->lws_structs;
 	info.gid = -1;
 	info.uid = -1;
 	//info.ws_ping_pong_interval = 5;
 
 	context = lws_create_context(&info);
 
-	if (context != NULL)
-		return OK;
+	if (context == NULL) {
+		_lws_free_ref(_lws_ref);
+		_lws_ref = NULL;
+		ERR_EXPLAIN("Unable to create LWS context");
+		ERR_FAIL_V(FAILED);
+	}
 
-	return FAILED;
+	return OK;
 }
 
 bool LWSServer::is_listening() const {
@@ -73,8 +76,8 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 	switch (reason) {
 		case LWS_CALLBACK_HTTP:
 			// no http for now
-			// closing immediately returning 1;
-			return 1;
+			// closing immediately returning -1;
+			return -1;
 
 		case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
 			// check header here?
@@ -100,6 +103,8 @@ int LWSServer::_handle_cb(struct lws *wsi, enum lws_callback_reasons reason, voi
 		}
 
 		case LWS_CALLBACK_CLOSED: {
+			if (peer_data == NULL)
+				return 0;
 			int32_t id = peer_data->peer_id;
 			if (_peer_map.has(id)) {
 				_peer_map[id]->close();
@@ -160,12 +165,12 @@ Ref<WebSocketPeer> LWSServer::get_peer(int p_id) const {
 
 LWSServer::LWSServer() {
 	context = NULL;
-	_this_ref = NULL;
+	_lws_ref = NULL;
 }
 
 LWSServer::~LWSServer() {
+	invalidate_lws_ref(); // we do not want any more callbacks
 	stop();
-	invalidate_lws_ref();
 }
 
 #endif // JAVASCRIPT_ENABLED

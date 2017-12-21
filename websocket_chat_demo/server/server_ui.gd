@@ -38,7 +38,7 @@ func _on_Listen_toggled( pressed ):
 			_destination.select(0)
 		if _server.listen(port, supported_protocols, use_multiplayer) == OK:
 			Utils._log(_log_dest, "Listing on port %s" % port)
-			Utils._log(_log_dest, "Supported protocols: %s" % _server.get_protocols().join(", "))
+			Utils._log(_log_dest, "Supported protocols: %s" % supported_protocols)
 		else:
 			Utils._log(_log_dest, "Error listening on port %s" % port)
 	else:

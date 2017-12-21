@@ -43,7 +43,6 @@ void WebSocketServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("listen", "port", "protocols", "gd_mp_api"), &WebSocketServer::listen, DEFVAL(PoolVector<String>()), DEFVAL(false));
 	ClassDB::bind_method(D_METHOD("stop"), &WebSocketServer::stop);
 	ClassDB::bind_method(D_METHOD("has_peer", "id"), &WebSocketServer::has_peer);
-	ClassDB::bind_method(D_METHOD("get_protocols"), &WebSocketServer::get_protocols);
 
 	ADD_SIGNAL(MethodInfo("client_disconnected", PropertyInfo(Variant::INT, "id")));
 	ADD_SIGNAL(MethodInfo("client_connected", PropertyInfo(Variant::INT, "id"), PropertyInfo(Variant::STRING, "protocol")));
