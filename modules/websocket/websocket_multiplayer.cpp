@@ -146,6 +146,12 @@ void WebSocketMultiplayerPeer::set_transfer_mode(TransferMode p_mode) {
 	// Websocket uses TCP, reliable
 }
 
+NetworkedMultiplayerPeer::TransferMode WebSocketMultiplayerPeer::get_transfer_mode() const {
+
+	// Websocket uses TCP, reliable
+	return TRANSFER_MODE_RELIABLE;
+}
+
 void WebSocketMultiplayerPeer::set_target_peer(int p_target_peer) {
 
 	_target_peer = p_target_peer;
