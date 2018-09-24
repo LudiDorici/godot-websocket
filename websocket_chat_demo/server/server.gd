@@ -11,6 +11,7 @@ var last_connected_client = 0
 func _init():
 	_server.connect("client_connected", self, "_client_connected")
 	_server.connect("client_disconnected", self, "_client_disconnected")
+	_server.connect("client_close_request", self, "_client_close_request")
 	_server.connect("data_received", self, "_client_receive")
 
 	_server.connect("peer_packet", self, "_client_receive")
@@ -25,14 +26,17 @@ func _process(delta):
 	if _server.is_listening():
 		_server.poll()
 
+func _client_close_request(id, code, reason):
+	Utils._log(_log_dest, "Client %s close code: %d, reason: %s" % [id, code, reason])
+
 func _client_connected(id, protocol):
 	_clients[id] = _server.get_peer(id)
 	_clients[id].set_write_mode(_write_mode)
 	last_connected_client = id
 	Utils._log(_log_dest, "%s: Client connected with protocol %s" % [id, protocol])
 
-func _client_disconnected(id):
-	Utils._log(_log_dest, "Client %s disconnected" % id)
+func _client_disconnected(id, clean):
+	Utils._log(_log_dest, "Client %s disconnected. Was clean: %s" % [id, clean])
 	if _clients.has(id):
 		_clients.erase(id)
 

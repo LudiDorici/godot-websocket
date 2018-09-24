@@ -50,7 +50,7 @@ func _on_Connect_toggled( pressed ):
 		_multiplayer.disabled = true
 		if _host.text != "":
 			Utils._log(_log_dest, "Connecting to host: %s" % [_host.text])
-			_client.connect_to_url(_host.text, PoolStringArray(["my-protocol-2", "my-protocol", "binary"]), multiplayer)
+			_client.connect_to_url(_host.text, PoolStringArray(), multiplayer)
 	else:
 		_destination.disabled = false
 		_write_mode.disabled = false
