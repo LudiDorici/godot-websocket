@@ -39,7 +39,7 @@ func _client_connected(protocol):
 	Utils._log(_log_dest, "Client just connected with protocol: %s" % protocol)
 	_client.get_peer(1).set_write_mode(_write_mode)
 
-func _client_disconnected(clean):
+func _client_disconnected(clean=true):
 	Utils._log(_log_dest, "Client just disconnected. Was clean: %s" % clean)
 
 func _client_received(p_id = 1):

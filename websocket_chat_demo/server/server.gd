@@ -35,7 +35,7 @@ func _client_connected(id, protocol):
 	last_connected_client = id
 	Utils._log(_log_dest, "%s: Client connected with protocol %s" % [id, protocol])
 
-func _client_disconnected(id, clean):
+func _client_disconnected(id, clean = true):
 	Utils._log(_log_dest, "Client %s disconnected. Was clean: %s" % [id, clean])
 	if _clients.has(id):
 		_clients.erase(id)

@@ -20,7 +20,7 @@ sync func update_player_name(player, name):
 master func request_action(action):
 	var sender = get_tree().get_rpc_sender_id()
 	if _players[_turn] != get_tree().get_rpc_sender_id():
-		_rpc("_log", "Someone is trying to cheat! %s" % str(sender))
+		rpc("_log", "Someone is trying to cheat! %s" % str(sender))
 		return
 	do_action(action)
 	next_turn()
