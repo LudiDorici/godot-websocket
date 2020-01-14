@@ -28,7 +28,7 @@ func _on_Listen_toggled( pressed ):
 	if pressed:
 		var use_multiplayer = _multiplayer.pressed
 		_multiplayer.disabled = true
-		var supported_protocols = PoolStringArray(["my-protocol", "binary"])
+		var supported_protocols = [] # Optional array of sub protocols.
 		var port = int(_port.value)
 		if use_multiplayer:
 			_write_mode.disabled = true
@@ -38,7 +38,7 @@ func _on_Listen_toggled( pressed ):
 			_destination.select(0)
 		if _server.listen(port, supported_protocols, use_multiplayer) == OK:
 			Utils._log(_log_dest, "Listing on port %s" % port)
-			Utils._log(_log_dest, "Supported protocols: %s" % supported_protocols)
+			Utils._log(_log_dest, "Supported protocols: %s" % str(supported_protocols))
 		else:
 			Utils._log(_log_dest, "Error listening on port %s" % port)
 	else:
