@@ -1,4 +1,5 @@
 # NOTE: This module was merged in Godot Engine master branch via pull request https://github.com/godotengine/godot/pull/14888 and will be available on official Godot Engine releases starting from version 3.1. This repository is no longer mantained and only left for historical purpose. All further development will be done inside the Godot Engine repository ( https://github.com/godotengine/godot ). Thank you for your support.
+# Demos are available for newer versions of Godot in the official [demo repository](https://github.com/godotengine/godot-demo-projects/tree/master/networking).
 
 # If you like this, and want to support us, [check out our videogame](http://store.steampowered.com/app/679100/Aequitas_Orbis) and follow us on [twitter](https://twitter.com/aequitasorbis)
 
